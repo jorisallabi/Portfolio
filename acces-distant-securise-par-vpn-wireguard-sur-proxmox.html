@@ -1,0 +1,397 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accès distant sécurisé à un laboratoire Proxmox par VPN WireGuard : entrée par le Wi-Fi, routage par politique, DNS dynamique et accès au LAN — Joris Allabi</title><meta name="description" content="VPN WireGuard installé sur l'hôte Proxmox, joignable par le Wi-Fi quand le PC de gestion est éteint : routage par politique, NAT vers le LAN, DuckDNS et redirection de port. Tests, incidents et limites documentés.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/portfolio.css"></head><body>
+<header class="top"><div class="wrap bar"><a class="brand" href="index.html">Joris Allabi</a>
+<nav><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
+<main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
+<h1>Accès distant sécurisé à un laboratoire Proxmox par VPN WireGuard : entrée par le Wi-Fi, routage par politique, DNS dynamique et accès au LAN</h1>
+<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Tests : 5 réussis sur 7</span><span class="chip">Laboratoire personnel sur matériel réel : serveur Proxmox VE, routeur Huawei, client mobile</span></div>
+<aside>
+<p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles.</b> Deux points restent ouverts et sont décrits sans les masquer : la mise à jour automatique du DNS dynamique a renvoyé une erreur dont la cause est identifiée (correction à valider), et le test de redémarrage complet du serveur n'a pas encore été fait.</p>
+<p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche.</p>
+</aside>
+
+<h2 id="sommaire">Sommaire</h2>
+<ol class="toc">
+<li><a href="#resume">Résumé exécutif</a></li>
+<li><a href="#cadrage">Cadrage et choix de conception</a></li>
+<li><a href="#architecture">Architecture et plan d'adressage</a></li>
+<li><a href="#mise-en-oeuvre">Mise en œuvre</a></li>
+<li><a href="#tests">Tests et validation</a></li>
+<li><a href="#incidents">Incidents et retour d'expérience</a></li>
+<li><a href="#securite">Sécurité et points d'attention</a></li>
+<li><a href="#exploitation">Exploitation : commandes de contrôle</a></li>
+<li><a href="#limites">Limites et risques résiduels</a></li>
+<li><a href="#evolutions">Évolutions envisagées</a></li>
+<li><a href="#cloture">Contrôle de clôture</a></li>
+</ol>
+
+<h2 id="resume">Résumé exécutif</h2>
+<table>
+<thead><tr><th>Contexte</th><th>Problématique</th><th>Objectif</th></tr></thead>
+<tbody><tr>
+<td>Un serveur Proxmox de laboratoire est relié par câble à un PC qui n'est pas toujours allumé. Le serveur dispose aussi d'une carte Wi-Fi connectée au routeur du domicile, dont l'adresse IP publique change.</td>
+<td>Sans VPN, le serveur n'est joignable que depuis le réseau local. Le lien filaire dépend du PC, et l'IP publique n'est pas fixe : une redirection de port classique cesse de fonctionner dès que l'adresse change.</td>
+<td>Rendre le serveur et le réseau du domicile joignables de l'extérieur par un tunnel WireGuard, même quand le PC est éteint, avec une adresse stable grâce à un DNS dynamique.</td>
+</tr></tbody></table>
+<h3>Chiffres vérifiables</h3>
+<ul>
+<li>1 tunnel WireGuard, 1 pair (le téléphone), 1 seul port exposé sur Internet : <code>UDP 51820</code>.</li>
+<li>3 réseaux atteignables depuis le tunnel : <code>10.10.10.0/24</code> (le VPN), <code>192.168.100.0/24</code> (LAN du domicile) et <code>192.168.137.0/24</code> (réseau de gestion, tant que le PC est allumé).</li>
+<li>Handshake observé sur la capture : 3 paquets UDP de 148, 92 et 32 octets, puis <code>latest handshake</code> de 59 secondes avec du trafic dans les deux sens.</li>
+<li>Mise à jour DNS prévue toutes les 5 minutes par une tâche planifiée.</li>
+<li>7 tests : 5 réussis, 1 écart ouvert (mise à jour DNS), 1 non réalisé (redémarrage).</li>
+</ul>
+<p>Périmètre exclu : plusieurs clients, filtrage fin du trafic issu du tunnel et supervision du tunnel (voir <a href="#evolutions">Évolutions</a>).</p>
+
+<h2 id="cadrage">1. Cadrage et choix de conception</h2>
+<h3>Besoin</h3>
+<p>Accéder à l'interface d'administration de Proxmox et au réseau du domicile depuis l'extérieur, sans ouvrir ces services directement sur Internet, et sans dépendre de l'état du PC auquel le port filaire est relié.</p>
+<h3>Choix retenus et justification</h3>
+<table>
+<thead><tr><th>Décision</th><th>Raison</th><th>Conséquence</th></tr></thead>
+<tbody>
+<tr><td>WireGuard plutôt qu'une redirection directe de l'interface Proxmox</td><td>Un seul port UDP exposé. WireGuard ne répond pas à un paquet qui n'est pas authentifié par une clé connue : le port ne se révèle pas à un simple scan.</td><td>L'interface Proxmox (<code>8006</code>) reste privée et n'est atteinte qu'à travers le tunnel.</td></tr>
+<tr><td>WireGuard installé sur l'hôte Proxmox, pas dans une VM</td><td>Le VPN reste actif tant que le serveur est allumé, sans double NAT et sans dépendre d'une machine virtuelle. Une VM sur un pont relié à une carte Wi-Fi poserait un problème : un pont ne fonctionne pas avec une interface Wi-Fi en mode client.</td><td>Aucune VM n'est nécessaire. En contrepartie, le VPN est installé sur l'hôte lui-même.</td></tr>
+<tr><td>Entrée du VPN par le Wi-Fi (<code>wlo1</code>) plutôt que par le port filaire</td><td>Le lien filaire passe par un PC qui n'est pas toujours allumé.</td><td>Il faut deux sorties vers Internet sur le même serveur, donc un routage par politique pour que les réponses repartent par le bon lien.</td></tr>
+<tr><td>DNS dynamique (DuckDNS)</td><td>L'adresse IP publique du routeur n'est pas statique.</td><td>La configuration du client utilise un nom, et une tâche planifiée met l'adresse à jour.</td></tr>
+<tr><td>NAT (masquerade) vers le LAN</td><td>Les équipements du domicile ne connaissent pas le réseau <code>10.10.10.0/24</code> et ne sauraient pas répondre au client.</td><td>Ils voient les connexions comme venant de l'hôte Proxmox (<code>192.168.100.62</code>).</td></tr>
+</tbody></table>
+
+<h2 id="architecture">2. Architecture et plan d'adressage</h2>
+<p>Le téléphone se connecte en données mobiles au nom DuckDNS, qui pointe vers l'adresse publique du routeur Huawei. Le routeur redirige le port UDP 51820 vers l'interface Wi-Fi du serveur, où <code>wg0</code> termine le tunnel. De là, le trafic est routé vers le LAN du domicile (par le Wi-Fi) ou vers le réseau de gestion (par <code>vmbr0</code>).</p>
+<figure class="embed"><iframe src="assets/schema-vpn-wireguard-proxmox.html" loading="lazy" title="Schéma d'architecture du VPN WireGuard sur Proxmox"></iframe><figcaption><a href="assets/schema-vpn-wireguard-proxmox.html" target="_blank" rel="noopener">Ouvrir le schéma en plein écran ↗</a></figcaption></figure>
+<h3>Plan d'adressage</h3>
+<table>
+<thead><tr><th>Élément</th><th>Adresse</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td>Routeur Huawei (LAN)</td><td><code>192.168.100.1</code></td><td>Passerelle du domicile, porte la redirection <code>UDP 51820</code></td></tr>
+<tr><td>Proxmox, <code>wlo1</code></td><td><code>192.168.100.62/24</code></td><td>Entrée du VPN, adresse fixe</td></tr>
+<tr><td>Proxmox, <code>vmbr0</code></td><td><code>192.168.137.3/24</code></td><td>Réseau de gestion, port filaire <code>eno1</code> relié au PC</td></tr>
+<tr><td>Proxmox, <code>wg0</code></td><td><code>10.10.10.1/24</code></td><td>Serveur WireGuard, écoute sur <code>UDP 51820</code></td></tr>
+<tr><td>Téléphone</td><td><code>10.10.10.2/24</code></td><td>Client, déclaré en <code>10.10.10.2/32</code> côté serveur</td></tr>
+</tbody></table>
+<h3>Parcours d'un paquet</h3>
+<ol>
+<li>Le téléphone envoie un paquet chiffré vers le nom DuckDNS, port <code>UDP 51820</code>.</li>
+<li>Le routeur traduit l'adresse de destination vers <code>192.168.100.62</code> et transmet à <code>wlo1</code>.</li>
+<li><code>wg0</code> déchiffre le paquet, dont la destination est par exemple <code>192.168.100.1</code> (le routeur lui-même).</li>
+<li>Le noyau le route vers <code>wlo1</code>, et la règle de NAT remplace l'adresse source <code>10.10.10.2</code> par <code>192.168.100.62</code>.</li>
+<li>La réponse revient vers <code>192.168.100.62</code>, le NAT la restitue, et <code>wg0</code> la chiffre vers le téléphone.</li>
+</ol>
+
+<h2 id="mise-en-oeuvre">3. Mise en œuvre</h2>
+<h3>3.1 Connexion de l'interface Wi-Fi</h3>
+<p>L'interface <code>wlo1</code> est configurée avec une adresse fixe et le fichier <code>wpa_supplicant</code> de l'interface. Le mot de passe est dans un fichier lisible par <code>root</code> seulement (<code>chmod 600</code>).</p>
+<pre><code>ctrl_interface=/run/wpa_supplicant
+update_config=1
+country=BJ
+
+network={
+    ssid="&lt;SSID du routeur&gt;"
+    psk="&lt;mot de passe Wi-Fi&gt;"
+}</code></pre>
+<p>Vérification de l'association :</p>
+<pre><code>$ wpa_cli -i wlo1 status | grep -E "wpa_state|ssid"
+ssid=&lt;SSID du routeur&gt;
+wpa_state=COMPLETED</code></pre>
+
+<h3>3.2 Routage par politique : répondre par le lien d'où vient la requête</h3>
+<p>Le serveur a deux sorties vers Internet. Sa route par défaut passe par <code>vmbr0</code> (le PC). Sans règle supplémentaire, une réponse WireGuard émise depuis <code>192.168.100.62</code> partirait par ce lien au lieu de revenir par le Wi-Fi, et le tunnel ne s'établirait pas. Une table de routage dédiée (<code>100</code>) force les paquets émis depuis l'adresse Wi-Fi à sortir par <code>wlo1</code>.</p>
+<pre><code>ip route add 192.168.100.0/24 dev wlo1 src 192.168.100.62 table 100
+ip route add default via 192.168.100.1 dev wlo1 table 100
+ip rule add from 192.168.100.62 table 100</code></pre>
+<p>Pour que ces règles survivent à un redémarrage, elles sont placées dans le bloc <code>wlo1</code> de <code>/etc/network/interfaces</code>. La ligne <code>gateway</code> du bloc d'origine n'est pas conservée, afin de ne pas créer une seconde route par défaut dans la table principale. Les <code>|| true</code> évitent qu'<code>ifup</code> échoue si une règle existe déjà.</p>
+<pre><code>iface wlo1 inet static
+        address 192.168.100.62/24
+        wpa-conf /etc/wpa_supplicant/wpa_supplicant-wlo1.conf
+        post-up ip route add 192.168.100.0/24 dev wlo1 src 192.168.100.62 table 100 || true
+        post-up ip route add default via 192.168.100.1 dev wlo1 table 100 || true
+        post-up ip rule add from 192.168.100.62 table 100 || true
+        pre-down ip rule del from 192.168.100.62 table 100 || true</code></pre>
+<p>Contrôle de la table dédiée (sortie observée) :</p>
+<pre><code>$ ip route show table 100
+default via 192.168.100.1 dev wlo1
+192.168.100.0/24 dev wlo1 scope link src 192.168.100.62</code></pre>
+
+<h3>3.3 Serveur WireGuard</h3>
+<p>Les paires de clés sont générées sur le serveur avec un <code>umask 077</code>, puis chaque clé publique est copiée dans la configuration de l'autre extrémité. Une clé privée n'est jamais copiée dans la configuration du pair.</p>
+<pre><code>apt install wireguard -y
+cd /etc/wireguard &amp;&amp; umask 077
+wg genkey | tee server.key | wg pubkey &gt; server.pub
+wg genkey | tee client.key | wg pubkey &gt; client.pub</code></pre>
+<p>Fichier <code>/etc/wireguard/wg0.conf</code> (clés remplacées par des repères). Le <code>PostUp</code> active le routage entre interfaces et pose deux règles de NAT, une vers le LAN du domicile (<code>wlo1</code>) et une vers le réseau de gestion (<code>vmbr0</code>) :</p>
+<pre><code>[Interface]
+Address = 10.10.10.1/24
+ListenPort = 51820
+PrivateKey = &lt;clé privée du serveur&gt;
+PostUp = sysctl -w net.ipv4.ip_forward=1; iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o wlo1 -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -s 10.10.10.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -D POSTROUTING -s 10.10.10.0/24 -o wlo1 -j MASQUERADE
+
+[Peer]
+PublicKey = &lt;clé publique du téléphone&gt;
+AllowedIPs = 10.10.10.2/32</code></pre>
+<p>Activation au démarrage et contrôle :</p>
+<pre><code>systemctl enable --now wg-quick@wg0
+wg show</code></pre>
+
+<h3>3.4 Redirection de port sur le routeur</h3>
+<p>Une règle de redirection envoie le port <code>UDP 51820</code> du routeur vers <code>192.168.100.62</code>. Le routeur n'a pas de champ « protocole » dans le premier formulaire : il apparaît dans un second bloc, qui doit être réglé sur <code>UDP</code>, avec les deux cases de chaque plage de ports renseignées (<code>51820</code> à <code>51820</code>). L'adresse physique de l'hôte, visible sur la capture d'origine, est masquée.</p>
+<figure><img loading="lazy" src="assets/wireguard-redirection-port-routeur.png" alt="Formulaire de redirection de port du routeur : nom VPN_WIREGUARD, hôte interne 192.168.100.62, protocole UDP, port interne et externe 51820"><figcaption>Règle de redirection <code>UDP 51820</code> vers l'hôte Proxmox. Capture prise pendant la saisie, avant la validation par « Add » et « Apply » ; la seconde case de chaque plage a été complétée ensuite.</figcaption></figure>
+<p>Avant de configurer cette redirection, j'ai vérifié que le routeur n'est pas derrière un CGNAT : l'adresse WAN affichée par le routeur est identique à celle qu'un service externe me renvoie. Si elles avaient différé, aucune redirection de port n'aurait fonctionné depuis l'extérieur.</p>
+
+<h3>3.5 DNS dynamique (DuckDNS)</h3>
+<p>Un script appelle l'API de DuckDNS toutes les 5 minutes. L'option <code>--interface wlo1</code> force la requête à sortir par le Wi-Fi : l'adresse enregistrée est ainsi celle du routeur où la redirection de port est configurée. Le script est en <code>chmod 700</code>, car le jeton permet de modifier l'adresse du domaine.</p>
+<pre><code>#!/bin/bash
+curl -s --interface wlo1 "https://www.duckdns.org/update?domains=&lt;sous-domaine&gt;&amp;token=&lt;jeton&gt;&amp;ip=" -o /opt/duckdns/duck.log</code></pre>
+<pre><code># crontab -l
+*/5 * * * * /opt/duckdns/duck.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
+
+<h3>3.6 Client (téléphone)</h3>
+<p>Le client est configuré dans l'application WireGuard du téléphone. Son fichier de configuration contient la clé privée du téléphone : il ne doit être conservé ni sur le serveur, ni dans un dépôt. Les trois réseaux sont déclarés dans <code>AllowedIPs</code>, ce qui n'envoie dans le tunnel que le trafic destiné à ces réseaux, pas tout le trafic du téléphone. L'<code>Endpoint</code> désigne le nom DuckDNS, ou l'adresse publique pendant les premiers essais.</p>
+<pre><code>[Interface]
+Address = 10.10.10.2/24
+PrivateKey = &lt;clé privée du téléphone&gt;
+
+[Peer]
+PublicKey = &lt;clé publique du serveur&gt;
+Endpoint = &lt;sous-domaine&gt;.duckdns.org:51820
+AllowedIPs = 10.10.10.0/24, 192.168.100.0/24, 192.168.137.0/24
+PersistentKeepalive = 25</code></pre>
+
+<h2 id="tests">4. Tests et validation</h2>
+<p>Les tests sont menés depuis le téléphone en données mobiles (jamais depuis le Wi-Fi du domicile, qui ne prouve rien sur l'accès extérieur) et depuis le serveur. Verdicts possibles : Réussi, Écart ouvert, Non réalisé.</p>
+
+<h3>Test 1 — Association Wi-Fi de <code>wlo1</code></h3>
+<ul>
+<li><b>Procédure :</b> <code>wpa_cli -i wlo1 status</code>, puis <code>ping -I wlo1 192.168.100.1</code>.</li>
+<li><b>Attendu :</b> <code>wpa_state=COMPLETED</code> et réponses du routeur.</li>
+<li><b>Observé :</b> association établie après nettoyage des instances en double (voir INC-001) ; le routeur répond en 5 à 8 ms. <b>Verdict : Réussi.</b></li>
+</ul>
+
+<h3>Test 2 — Sortie vers Internet par le Wi-Fi</h3>
+<ul>
+<li><b>Procédure :</b> <code>curl -4 --interface wlo1 https://api.ipify.org</code> après la mise en place de la table de routage dédiée.</li>
+<li><b>Attendu :</b> l'adresse publique du routeur.</li>
+<li><b>Observé :</b> une adresse publique est renvoyée ; avant la règle de routage, la même commande échouait (voir INC-002). Le <code>ping</code> vers <code>8.8.8.8</code> reste sans réponse alors que les connexions TCP aboutissent ; je n'ai pas isolé la cause (filtrage ICMP probable, non confirmé). <b>Verdict : Réussi.</b></li>
+</ul>
+
+<h3>Test 3 — Absence de CGNAT</h3>
+<ul>
+<li><b>Procédure :</b> comparer l'adresse WAN affichée dans l'interface du routeur avec l'adresse vue depuis Internet.</li>
+<li><b>Attendu :</b> adresses identiques, hors plages privées et hors <code>100.64.0.0/10</code>.</li>
+<li><b>Observé :</b> adresses identiques ; la redirection de port peut fonctionner. <b>Verdict : Réussi.</b></li>
+</ul>
+
+<h3>Test 4 — Établissement du tunnel depuis les données mobiles</h3>
+<ul>
+<li><b>Procédure :</b> <code>tcpdump -ni wlo1 udp port 51820</code> pendant l'activation du tunnel sur le téléphone, puis <code>wg show</code>.</li>
+<li><b>Attendu :</b> un échange de handshake sur <code>wlo1</code>, puis un <code>latest handshake</code> récent côté serveur.</li>
+<li><b>Observé :</b> trois paquets : 148 octets du téléphone vers le serveur (initiation), 92 octets en réponse, 32 octets du téléphone (premier keepalive). Puis un handshake de 59 secondes avec du trafic dans les deux sens. <b>Verdict : Réussi.</b></li>
+</ul>
+<pre><code>01:59:01.260922 IP &lt;IP mobile&gt;.34661 &gt; 192.168.100.62.51820: UDP, length 148
+01:59:01.261299 IP 192.168.100.62.51820 &gt; &lt;IP mobile&gt;.34661: UDP, length 92
+01:59:01.465851 IP &lt;IP mobile&gt;.34661 &gt; 192.168.100.62.51820: UDP, length 32</code></pre>
+<pre><code>interface: wg0
+  public key: &lt;clé publique du serveur&gt;
+  listening port: 51820
+
+peer: &lt;clé publique du téléphone&gt;
+  endpoint: &lt;IP mobile&gt;:&lt;port&gt;
+  allowed ips: 10.10.10.2/32
+  latest handshake: 59 seconds ago
+  transfer: 83.34 KiB received, 441.58 KiB sent</code></pre>
+
+<h3>Test 5 — Accès au LAN du domicile à travers le tunnel</h3>
+<ul>
+<li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.168.100.1</code>), après ajout du NAT sur <code>wlo1</code> et de <code>192.168.100.0/24</code> dans <code>AllowedIPs</code>.</li>
+<li><b>Attendu :</b> la page du routeur répond ; sur le serveur, les paquets sortent par <code>wlo1</code> avec la source <code>192.168.100.62</code>.</li>
+<li><b>Observé :</b> accès au LAN confirmé depuis le téléphone. Pas de capture dédiée de ce test. <b>Verdict : Réussi.</b></li>
+</ul>
+
+<h3>Test 6 — DNS dynamique</h3>
+<ul>
+<li><b>Procédure :</b> <code>nslookup</code> du sous-domaine, lecture de <code>/opt/duckdns/duck.log</code> et de <code>crontab -l</code>.</li>
+<li><b>Attendu :</b> résolution vers l'adresse publique, journal à <code>OK</code>, une seule ligne planifiée.</li>
+<li><b>Observé :</b> la résolution renvoie la bonne adresse et la tâche planifiée est unique, mais le journal affiche <code>KO</code> : le script contenait un point en trop après le nom du sous-domaine (voir INC-005). La correction est identifiée ; le passage à <code>OK</code> reste à constater. <b>Verdict : Écart ouvert.</b></li>
+</ul>
+
+<h3>Test 7 — Redémarrage du serveur</h3>
+<ul>
+<li><b>Procédure :</b> redémarrer, puis contrôler <code>pgrep -a wpa_supplicant</code>, <code>wpa_cli -i wlo1 status</code>, <code>ip rule</code>, <code>wg show</code>, et reconnecter le téléphone sans intervention.</li>
+<li><b>Attendu :</b> une seule instance <code>wpa_supplicant</code>, Wi-Fi associé, une règle de routage, <code>wg0</code> en écoute, tunnel rétabli.</li>
+<li><b>Observé :</b> test pas encore exécuté. <b>Verdict : Non réalisé.</b></li>
+</ul>
+
+<h3>Synthèse</h3>
+<table>
+<thead><tr><th>#</th><th>Test</th><th>Verdict</th><th>Preuve</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Association Wi-Fi de <code>wlo1</code></td><td><span class="badge ok">Réussi</span></td><td>Sortie de <code>wpa_cli</code></td></tr>
+<tr><td>2</td><td>Sortie Internet par le Wi-Fi</td><td><span class="badge ok">Réussi</span></td><td>Sortie de <code>curl</code></td></tr>
+<tr><td>3</td><td>Absence de CGNAT</td><td><span class="badge ok">Réussi</span></td><td>Comparaison des adresses WAN</td></tr>
+<tr><td>4</td><td>Tunnel depuis les données mobiles</td><td><span class="badge ok">Réussi</span></td><td>Capture <code>tcpdump</code> et <code>wg show</code></td></tr>
+<tr><td>5</td><td>Accès au LAN par le tunnel</td><td><span class="badge ok">Réussi</span></td><td>Pas de capture dédiée</td></tr>
+<tr><td>6</td><td>DNS dynamique</td><td><span class="badge wip">Écart ouvert</span></td><td>Journal <code>KO</code> à rejouer</td></tr>
+<tr><td>7</td><td>Redémarrage complet</td><td><span class="badge plan">Non réalisé</span></td><td>À faire</td></tr>
+</tbody></table>
+
+<h2 id="incidents">5. Incidents et retour d'expérience</h2>
+<h3 id="inc-001-plusieurs-instances-wpa-supplicant">INC-001 — Interface Wi-Fi inactive et plusieurs instances de <code>wpa_supplicant</code></h3>
+<ul>
+<li><b>Symptôme :</b> <code>wlo1</code> à l'état <code>DOWN</code> malgré son adresse, et <code>wpa_cli</code> sans interface de contrôle. Après un lancement manuel, <code>wpa_state=DISCONNECTED</code> et des dizaines de messages « Match already configured ».</li>
+<li><b>Cause :</b> trois processus <code>wpa_supplicant</code> (celui du système et deux lancés à la main) se disputaient l'interface, constaté avec <code>pgrep -a wpa_supplicant</code>.</li>
+<li><b>Correction :</b> arrêt de tous les processus avec <code>killall wpa_supplicant</code>, puis un seul lancement. L'association passe à <code>COMPLETED</code>.</li>
+<li><b>Enseignement :</b> lister les processus avant de relancer un démon, plutôt que d'en ajouter un de plus.</li>
+</ul>
+<h3 id="inc-002-sortie-impossible-par-wlo1">INC-002 — Aucune requête ne sort par <code>wlo1</code></h3>
+<ul>
+<li><b>Symptôme :</b> <code>curl --interface wlo1</code> échoue en 4 à 15 ms, et <code>ping -I wlo1</code> répond « Network is unreachable », alors que le routeur répond en local.</li>
+<li><b>Cause :</b> la seule route par défaut passe par <code>vmbr0</code> ; aucune route n'existe via <code>wlo1</code>. Un échec aussi rapide indique un problème local, pas un blocage distant.</li>
+<li><b>Correction :</b> table de routage <code>100</code> et règle <code>ip rule add from 192.168.100.62 table 100</code>. <code>curl</code> renvoie ensuite l'adresse publique.</li>
+<li><b>Enseignement :</b> avec deux sorties, une réponse doit repartir par l'interface d'où est venue la requête ; c'est exactement le besoin de WireGuard côté Wi-Fi.</li>
+</ul>
+<h3 id="inc-003-ifup-echoue-sur-wpasupplicant">INC-003 — <code>ifup wlo1</code> échoue sur le script <code>wpasupplicant</code></h3>
+<ul>
+<li><b>Symptôme :</b> <code>ifup</code> s'arrête avec « pre-up cmd /etc/network/if-pre-up.d/wpasupplicant failed: returned 1 », et <code>wpa_state=INTERFACE_DISABLED</code>.</li>
+<li><b>Cause :</b> une instance lancée à la main occupait déjà l'interface, donc celle que le script d'<code>ifup</code> voulait démarrer ne pouvait pas démarrer.</li>
+<li><b>Correction :</b> arrêt de toutes les instances, suppression des fichiers de contrôle résiduels, désactivation du service <code>wpa_supplicant</code> du système, puis <code>ifup wlo1</code> comme seul gestionnaire du Wi-Fi. Une seule instance est alors présente (avec le fichier de PID d'<code>ifup</code>), l'association est <code>COMPLETED</code> et la table <code>100</code> est remplie.</li>
+<li><b>Observation :</b> la règle <code>from 192.168.100.62 lookup 100</code> apparaissait en double (ajout manuel, puis <code>post-up</code>). Sans conséquence, supprimée avec <code>ip rule del</code>.</li>
+<li><b>Enseignement :</b> un seul acteur gère l'interface. Mélanger lancement manuel et configuration persistante crée des conflits qui reviennent au redémarrage.</li>
+</ul>
+<h3 id="inc-004-pas-de-handshake-apres-redemarrage-de-wg0">INC-004 — Aucun handshake après le redémarrage de <code>wg0</code></h3>
+<ul>
+<li><b>Symptôme :</b> après <code>systemctl restart wg-quick@wg0</code> (ajout du NAT vers <code>wlo1</code>), <code>wg show</code> n'affiche ni <code>endpoint</code>, ni <code>handshake</code>, ni trafic, et <code>tcpdump -ni wg0</code> reste vide.</li>
+<li><b>Piste suivie :</b> le tunnel côté téléphone n'était pas réactivé ; un test depuis le Wi-Fi du domicile peut aussi échouer (certains routeurs ne gèrent pas ce retour). La cause exacte n'a pas été confirmée.</li>
+<li><b>Résolution :</b> tunnel réactivé sur le téléphone en données mobiles ; le handshake apparaît.</li>
+<li><b>Observation liée :</b> une capture <code>tcpdump -ni wlo1 icmp</code> ne montrait que les pings du routeur vers le serveur (surveillance de routine), qui masquaient le test. Il faut filtrer par adresse source pour isoler le trafic recherché.</li>
+<li><b>Statut :</b> résolu, cause racine non confirmée.</li>
+</ul>
+<h3 id="inc-005-duckdns-ko">INC-005 — La mise à jour DuckDNS répond <code>KO</code></h3>
+<ul>
+<li><b>Symptôme :</b> <code>/opt/duckdns/duck.log</code> contient <code>KO</code>, alors que la résolution DNS renvoie la bonne adresse (enregistrée plus tôt).</li>
+<li><b>Cause :</b> le paramètre <code>domains=</code> du script se terminait par un point (<code>nom.</code>), que DuckDNS ne reconnaît pas. Le nom doit être donné sans point et sans <code>.duckdns.org</code>.</li>
+<li><b>Risque :</b> sans mise à jour réussie, le jour où l'adresse publique change, le nom pointe vers l'ancienne adresse et le VPN cesse de fonctionner sans avertissement.</li>
+<li><b>Correction :</b> retrait du point dans le script avec <code>sed</code>. Le passage du journal à <code>OK</code> reste à constater.</li>
+<li><b>Statut :</b> correction identifiée, à valider.</li>
+</ul>
+
+<h2 id="securite">6. Sécurité et points d'attention</h2>
+<table>
+<thead><tr><th>Sujet</th><th>État</th><th>Détail</th></tr></thead>
+<tbody>
+<tr><td>Surface exposée</td><td>Appliqué</td><td>Un seul port UDP ouvert. WireGuard ignore les paquets qui ne portent pas une clé connue.</td></tr>
+<tr><td>Clés privées</td><td>Appliqué</td><td>Générées avec <code>umask 077</code> dans <code>/etc/wireguard</code>. Seules les clés publiques sont copiées dans la configuration de l'autre extrémité.</td></tr>
+<tr><td>Jeton DuckDNS et mot de passe Wi-Fi</td><td>Appliqué</td><td>Stockés dans des fichiers réservés à <code>root</code> (<code>chmod 700</code> et <code>chmod 600</code>). Le jeton permet de rediriger le domaine : il ne doit figurer dans aucun dépôt ni capture.</td></tr>
+<tr><td>Filtrage du trafic issu du tunnel</td><td>Non configuré</td><td>Le client peut atteindre tout ce qui est routable depuis le serveur. À durcir par des règles de pare-feu limitées aux services utiles.</td></tr>
+<tr><td>Traçabilité par client</td><td>Limitée</td><td>À cause du NAT, les équipements du domicile voient <code>192.168.100.62</code>, pas l'adresse du client VPN.</td></tr>
+<tr><td>Client sur le Wi-Fi du domicile</td><td>Point d'attention</td><td>La route <code>192.168.100.0/24</code> du tunnel entre en conflit avec le réseau local réel : le tunnel doit être désactivé quand le téléphone est déjà à la maison.</td></tr>
+</tbody></table>
+
+<h2 id="exploitation">7. Exploitation : commandes de contrôle</h2>
+<table>
+<thead><tr><th>Cible</th><th>Commande</th><th>Ce qu'elle vérifie</th></tr></thead>
+<tbody>
+<tr><td>Wi-Fi</td><td><code>wpa_cli -i wlo1 status | grep -E "wpa_state|ssid"</code></td><td>Association au routeur (<code>COMPLETED</code>)</td></tr>
+<tr><td>Wi-Fi</td><td><code>pgrep -a wpa_supplicant</code></td><td>Une seule instance en cours</td></tr>
+<tr><td>Routage</td><td><code>ip rule</code> et <code>ip route show table 100</code></td><td>Règle de politique et route par défaut via <code>wlo1</code></td></tr>
+<tr><td>Routage</td><td><code>ip route get 8.8.8.8 from 192.168.100.62</code></td><td>Le chemin choisi est bien <code>dev wlo1</code></td></tr>
+<tr><td>WireGuard</td><td><code>wg show</code></td><td>Pair, <code>latest handshake</code> et compteurs de trafic</td></tr>
+<tr><td>WireGuard</td><td><code>systemctl is-active wg-quick@wg0</code> et <code>systemctl is-enabled wg-quick@wg0</code></td><td>Service actif et lancé au démarrage</td></tr>
+<tr><td>Routage</td><td><code>sysctl net.ipv4.ip_forward</code></td><td>Retransmission activée (<code>1</code>)</td></tr>
+<tr><td>NAT</td><td><code>iptables -t nat -L POSTROUTING -n -v</code></td><td>Deux règles <code>MASQUERADE</code> (<code>vmbr0</code> et <code>wlo1</code>) et leurs compteurs</td></tr>
+<tr><td>Diagnostic</td><td><code>tcpdump -ni wlo1 udp port 51820</code></td><td>Arrivée des paquets WireGuard sur le Wi-Fi</td></tr>
+<tr><td>Diagnostic</td><td><code>tcpdump -ni wlo1 'src 192.168.100.62 and dst 192.168.100.1'</code></td><td>Trafic NAT vers le LAN, sans le bruit du routeur</td></tr>
+<tr><td>DNS dynamique</td><td><code>cat /opt/duckdns/duck.log</code> et <code>nslookup &lt;sous-domaine&gt;.duckdns.org</code></td><td>Dernière réponse de DuckDNS (<code>OK</code>) et adresse résolue</td></tr>
+</tbody></table>
+<p>Les commandes sont celles des versions courantes de Debian et de Proxmox VE ; adapter à la version installée.</p>
+
+<h2 id="limites">8. Limites et risques résiduels</h2>
+<ul>
+<li>Un seul lien Wi-Fi sans redondance, et un seul serveur : si l'un tombe, le VPN tombe.</li>
+<li>Le réseau de gestion <code>192.168.137.0/24</code> n'est atteignable que si le PC auquel <code>vmbr0</code> est relié est allumé ; seules <code>10.10.10.1</code> et le LAN du domicile sont joignables en permanence.</li>
+<li>La mise à jour de l'adresse publique n'est pas encore validée : un changement d'adresse coupe le VPN tant que le journal DuckDNS n'affiche pas <code>OK</code>.</li>
+<li>Persistance au redémarrage non prouvée (test 7) : le conflit entre instances de <code>wpa_supplicant</code> pourrait réapparaître.</li>
+<li>Aucun filtrage spécifique sur le trafic du tunnel.</li>
+<li>Un seul client, aucune rotation de clés documentée.</li>
+<li>Débit et latence du tunnel non mesurés ; le Wi-Fi 2.4 GHz est le facteur limitant probable.</li>
+</ul>
+
+<h2 id="evolutions">9. Évolutions envisagées</h2>
+<ol>
+<li><b>Valider la persistance :</b> constater <code>OK</code> dans le journal DuckDNS, puis redémarrer le serveur et rejouer les contrôles du test 7.</li>
+<li><b>Atteindre les machines virtuelles sans dépendre du PC :</b> les placer sur un pont interne sans port physique, relié par routage, au lieu de <code>vmbr0</code>.</li>
+<li><b>Durcir le trafic issu du tunnel :</b> n'autoriser que les services utiles (interface Proxmox, SSH, éventuellement quelques hôtes du LAN) par des règles de pare-feu sur <code>wg0</code>.</li>
+</ol>
+
+<h2 id="cloture">10. Contrôle de clôture</h2>
+<ul>
+<li>Tests réussis : 5 / 7</li>
+<li>Tests échoués : 0</li>
+<li>Écart ouvert : 1 (mise à jour DuckDNS, correction à valider)</li>
+<li>Test non réalisé : 1 (redémarrage complet)</li>
+<li>Preuves : captures de terminal anonymisées (<code>tcpdump</code>, <code>wg show</code>, <code>ip route</code>, <code>wpa_cli</code>) et capture du formulaire de redirection ; le test 5 n'a pas de capture dédiée.</li>
+<li>Panne contrôlée testée : Non</li>
+<li>Limites et risques résiduels documentés : Oui</li>
+<li>Décision : Fonctionnel, à consolider</li>
+<li>Prochaine action concrète : constater le journal DuckDNS à <code>OK</code>, puis redémarrer le serveur et valider le retour automatique du tunnel</li>
+</ul>
+<p><b>Règle de statut :</b> « Fonctionnel » décrit ce qui a été observé en test. Il ne couvre ni la persistance après redémarrage, ni le changement d'adresse publique, qui restent des actions ouvertes.</p>
+<hr />
+<h2 id="projet-associe">Projet associé</h2>
+<p>Le même protocole de raisonnement s'applique à un autre type d'interconnexion : la fiche <a href="interconnexion-de-deux-sites-d-entreprise-par-vpn-ipsec-ikev.html">Interconnexion de deux sites par VPN IPsec IKEv2</a> relie deux réseaux d'entreprise entre pare-feu FortiGate, là où cette fiche donne à un seul utilisateur un accès distant à un laboratoire.</p>
+<h1 id="pilotage-du-projet-pratiques-inspirees-ditil-4">Pilotage du projet — pratiques de gestion inspirées d'ITIL 4</h1>
+<blockquote><p><strong>Périmètre de ce bilan :</strong> les éléments cochés correspondent aux réalisations visibles dans la fiche et aux preuves associées. Il s'agit d'une démarche de laboratoire inspirée d'ITIL 4, et non d'une certification ITIL ni de la preuve d'un processus ITSM formel.</p></blockquote>
+<h2 id="itil-1-cadrage">1. Cadrage et définition du service</h2>
+<ul>
+<li>☑ Le besoin d'accès distant sécurisé et ses contraintes (PC non permanent, adresse IP publique variable) sont décrits.</li>
+<li>☑ Les choix de conception (hôte plutôt que VM, entrée par le Wi-Fi, DNS dynamique, NAT) sont justifiés dans un tableau.</li>
+<li>☑ Le périmètre exclu (plusieurs clients, filtrage fin, supervision) est indiqué.</li>
+</ul>
+<h2 id="itil-2-conception">2. Conception et gestion de la configuration</h2>
+<ul>
+<li>☑ L'architecture et le plan d'adressage sont documentés, avec le parcours d'un paquet.</li>
+<li>☑ Les configurations utiles (Wi-Fi, routage, WireGuard, DNS dynamique, client) sont reproduites avec des valeurs sensibles remplacées.</li>
+<li>☑ Le routage est rendu persistant dans la configuration réseau du serveur.</li>
+</ul>
+<h2 id="itil-3-mise-en-oeuvre">3. Mise en œuvre technique</h2>
+<ul>
+<li>☑ Interface Wi-Fi associée, routage par politique en place, tunnel WireGuard actif.</li>
+<li>☑ Redirection de port UDP 51820 configurée, absence de CGNAT vérifiée au préalable.</li>
+<li>☑ NAT vers le LAN du domicile et vers le réseau de gestion configuré.</li>
+<li>☑ Client mobile configuré avec les trois réseaux dans <code>AllowedIPs</code>.</li>
+</ul>
+<h2 id="itil-4-validation">4. Validation et mise en service</h2>
+<ul>
+<li>☑ Handshake observé en capture depuis les données mobiles.</li>
+<li>☑ Accès au LAN du domicile confirmé à travers le tunnel.</li>
+<li>☑ Cinq tests sur sept réussis ; l'écart et le test restant sont nommés.</li>
+</ul>
+<h2 id="itil-5-documentation">5. Documentation et amélioration</h2>
+<ul>
+<li>☑ Cinq incidents sont documentés avec symptôme, cause, correction et enseignement.</li>
+<li>☑ Les commandes de contrôle sont regroupées dans un tableau d'exploitation.</li>
+<li>☑ Les limites et les évolutions envisagées sont séparées des réalisations.</li>
+</ul>
+<h2 id="itil-6-limites">6. Limites et actions non démontrées par les preuves actuelles</h2>
+<ul>
+<li>Le retour automatique du tunnel après redémarrage du serveur n'est pas démontré.</li>
+<li>La mise à jour automatique de l'adresse publique n'est pas démontrée tant que le journal DuckDNS n'affiche pas <code>OK</code>.</li>
+<li>Aucun scénario de panne (perte du lien Wi-Fi, changement d'adresse publique) n'est testé.</li>
+<li>Aucune mesure de débit ou de latence, aucun filtrage du trafic issu du tunnel, aucune supervision du tunnel.</li>
+<li>Aucune procédure formelle de changement, de retour arrière ou de rotation des clés n'est fournie.</li>
+</ul>
+<h2 id="itil-7-bilan">7. Bilan de clôture</h2>
+<ul>
+<li><strong>Statut :</strong> fonctionnel pour le périmètre testé : accès distant au serveur et au LAN du domicile depuis un téléphone en données mobiles.</li>
+<li><strong>Preuves principales :</strong> capture du handshake, sortie de <code>wg show</code>, tables de routage, formulaire de redirection de port.</li>
+<li><strong>Réserve :</strong> le statut Fonctionnel ne signifie ni que le tunnel survit à un redémarrage, ni qu'il survit à un changement d'adresse publique.</li>
+<li><strong>Référentiel :</strong> pratiques de documentation, configuration, validation et amélioration inspirées d'ITIL 4 ; aucune conformité formelle n'est revendiquée.</li>
+</ul>
+<hr /></main>
+<footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
+<script src="assets/portfolio.js" defer></script>
+</body></html>
