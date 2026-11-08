@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Infrastructure Windows Server résiliente : AD DS, DNS, DHCP, GPO et contrôleur secondaire — Joris Allabi</title><meta name="description" content="Projet à réaliser. Objectif : concevoir un domaine avec deux contrôleurs, DNS intégré à AD, DHCP avec mécanisme de bascule adapté, GPO et tests de réplicat">
+<title>Infrastructure Windows Server résiliente : AD DS, DNS, DHCP, GPO et contrôleur secondaire — Joris Allabi</title><meta name="description" content="Extension planifiée d'un socle déjà en service (contrôleur de domaine AD DS, DHCP et DNS des labs campus et Zabbix). Objectif : deux contrôleurs, DNS intégré à AD, DHCP en haute disponibilité, GPO et tests de réplication.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
@@ -8,18 +8,28 @@
 <nav><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
 <h1>Infrastructure Windows Server résiliente : AD DS, DNS, DHCP, GPO et contrôleur secondaire</h1>
-<div class="meta"><span class="badge plan">Planifié</span><span class="chip">Avancement 0%</span><span class="chip">Laboratoire Windows Server / services d’infrastructure d’entreprise</span></div>
+<div class="meta"><span class="badge plan">Planifié</span><span class="chip">Extension d’un socle déjà en service</span><span class="chip">Laboratoire Windows Server / services d’infrastructure d’entreprise</span></div>
 <aside>
 <p>🗓️</p>
-<p>Projet planifié — aucune réalisation n’est revendiquée à ce stade. Le statut sera mis à jour au fur et à mesure des tests et des preuves.</p>
+<p>Extension planifiée : second contrôleur, réplication, unités d’organisation, GPO et DHCP en haute disponibilité ne sont pas encore réalisés, et aucune réalisation n’est revendiquée sur ce périmètre. Le socle, un contrôleur de domaine assurant AD DS, DHCP et DNS, est déjà en service dans les labs campus et Zabbix. Le statut sera mis à jour au fur et à mesure des tests et des preuves.</p>
 </aside>
+<h2 id="socle-deja-en-place">Socle déjà en place dans d’autres labs</h2>
+<p>Cette fiche prolonge un socle Windows Server déjà utilisé dans deux laboratoires. Voici ce qui est établi et où le vérifier.</p>
+<table>
+<thead><tr><th>Élément</th><th>État</th><th>Preuve</th></tr></thead>
+<tbody>
+<tr><td>Contrôleur de domaine Windows Server hébergeant AD DS, DHCP et DNS, instance unique en <code>172.16.50.10</code></td><td>En service dans le lab</td><td><a href="supervision-zabbix-en-tres-haute-disponibilite-reseau-campus.html">Fiche Zabbix</a> et <a href="reseau-d-entreprise-campus-redondant-segmentation-vlan-passe.html">fiche campus</a></td></tr>
+<tr><td>DHCP centralisé sur ce contrôleur et relayé depuis les VLAN utilisateurs (<code>ip helper-address</code>)</td><td>Constaté : un PC du VLAN 10 obtient une adresse</td><td><a href="reseau-d-entreprise-campus-redondant-segmentation-vlan-passe.html">Fiche campus</a></td></tr>
+<tr><td>Cluster Hyper-V à deux nœuds sur stockage iSCSI, avec témoin de quorum</td><td>Livré : migration à chaud et extinction d’un hôte réussies</td><td><a href="supervision-zabbix-en-tres-haute-disponibilite-reseau-campus.html">Fiche Zabbix</a> (tests 4 et 5, vidéos)</td></tr>
+</tbody></table>
+<p><b>Ce qui n’est pas encore démontré et fait l’objet de cette fiche :</b> un second contrôleur de domaine et la réplication, les unités d’organisation, les groupes et les GPO, la jonction de clients Windows au domaine, et un DHCP en haute disponibilité. Le contrôleur actuel est une instance unique, sans redondance, comme l’indiquent les fiches Zabbix et campus.</p>
 <h2 id="probleme-a-traiter">Problème à traiter</h2>
 <p>Un domaine d’entreprise dépend de services critiques : authentification, résolution DNS, attribution IP et application des stratégies. Une configuration incorrecte ou un contrôleur indisponible peut perturber l’accès aux ressources.</p>
 <h2 id="objectif">Objectif</h2>
 <p>Concevoir un environnement de laboratoire comprenant deux contrôleurs de domaine, DNS, DHCP, des unités d’organisation et des GPO, puis démontrer le comportement en fonctionnement nominal et lors de pannes contrôlées.</p>
 <h2 id="perimetre-prevu">Périmètre prévu</h2>
 <ul>
-<li>Installation et configuration d’AD DS et DNS sur le contrôleur principal.</li>
+<li>Contrôleur principal : AD DS, DNS et DHCP sont déjà en service dans les labs campus et Zabbix ; sa configuration détaillée (nom de domaine, zones DNS, étendues DHCP) reste à documenter ici.</li>
 <li>Promotion d’un second contrôleur et validation de la réplication.</li>
 <li>Configuration DHCP et étude/mise en œuvre d’une stratégie de haute disponibilité appropriée.</li>
 <li>Création d’OU, groupes, comptes de test et GPO.</li>
@@ -39,7 +49,7 @@
 <h2 id="plan-dexecution">Plan d’exécution</h2>
 <ol>
 <li>Cadrage, adressage, DNS, noms et versions.</li>
-<li>Installation du premier contrôleur et validation.</li>
+<li>Documentation du premier contrôleur, déjà en service, et validation de ses rôles.</li>
 <li>Installation du second contrôleur et vérification de réplication.</li>
 <li>Mise en place des OU, groupes, GPO et clients.</li>
 <li>Configuration DHCP et tests de disponibilité.</li>
@@ -49,7 +59,7 @@
 <h2 id="preuves-a-publier">Preuves à publier</h2>
 <p>Schéma logique, tableau IP/DNS, captures des rôles et réplication, résultats de commandes, tests GPO, chronologie de panne, conclusions et limites du lab.</p>
 <hr />
-<h1>Pilotage du projet — bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées valident uniquement les travaux de cadrage et de conception effectivement documentés. Elles ne signifient pas que le laboratoire technique est déployé. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> cadrage et conception du laboratoire Windows Server, sans prétendre que les contrôleurs ou services ont été déployés</p></blockquote><h2>1. Cadrage</h2><ul><li>☑ Le besoin de résilience AD DS, DNS, DHCP et GPO est défini.</li><li>☑ Le périmètre prévu et les objectifs du laboratoire sont décrits.</li><li>☑ Les critères d’acceptation et preuves attendues sont listés.</li><li>☑ Les dépendances et risques de disponibilité sont identifiés.</li></ul><h2>2. Conception</h2><ul><li>☑ Le rôle du contrôleur principal et du contrôleur secondaire est défini.</li><li>☑ Les étapes de réplication AD/DNS, DHCP, OU, groupes, GPO et jonction client sont planifiées.</li><li>☑ Les scénarios de panne et de reprise à tester sont décrits.</li><li>☑ Le plan d’exécution et l’ordre des étapes sont documentés.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Déployer le premier contrôleur de domaine et vérifier AD DS/DNS.</li><li>Promouvoir le second contrôleur et prouver la réplication.</li><li>Créer OU, groupes, comptes et GPO, puis vérifier leur application.</li><li>Configurer DHCP et tester le mode de haute disponibilité choisi.</li><li>Joindre un client au domaine et exécuter les tests de panne et de reprise.</li></ul><p><strong>Bilan :</strong> la préparation documentaire est réalisée ; la mise en œuvre technique reste à effectuer. Le statut du projet n’est pas augmenté par les seules cases de planification.</p>
+<h1>Pilotage du projet — bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées valident uniquement les travaux de cadrage et de conception effectivement documentés. Elles ne signifient pas que le laboratoire technique est déployé. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> cadrage et conception de l’extension du laboratoire Windows Server, sans prétendre que le second contrôleur, la réplication, les GPO ou la haute disponibilité DHCP ont été déployés</p></blockquote><h2>1. Cadrage</h2><ul><li>☑ Le besoin de résilience AD DS, DNS, DHCP et GPO est défini.</li><li>☑ Le périmètre prévu et les objectifs du laboratoire sont décrits.</li><li>☑ Les critères d’acceptation et preuves attendues sont listés.</li><li>☑ Les dépendances et risques de disponibilité sont identifiés.</li></ul><h2>2. Conception</h2><ul><li>☑ Le rôle du contrôleur principal et du contrôleur secondaire est défini.</li><li>☑ Les étapes de réplication AD/DNS, DHCP, OU, groupes, GPO et jonction client sont planifiées.</li><li>☑ Les scénarios de panne et de reprise à tester sont décrits.</li><li>☑ Le plan d’exécution et l’ordre des étapes sont documentés.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Documenter le premier contrôleur de domaine, déjà en service, et vérifier AD DS/DNS avec des commandes et journaux.</li><li>Promouvoir le second contrôleur et prouver la réplication.</li><li>Créer OU, groupes, comptes et GPO, puis vérifier leur application.</li><li>Configurer DHCP et tester le mode de haute disponibilité choisi.</li><li>Joindre un client au domaine et exécuter les tests de panne et de reprise.</li></ul><p><strong>Bilan :</strong> la préparation documentaire est réalisée ; la mise en œuvre technique de l’extension (second contrôleur, réplication, OU, GPO, DHCP en haute disponibilité) reste à effectuer. Le statut du projet n’est pas augmenté par les seules cases de planification.</p>
 </main>
 <footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
 <script src="assets/portfolio.js" defer></script>
