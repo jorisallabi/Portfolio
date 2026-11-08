@@ -8,10 +8,10 @@
 <nav><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
 <h1>Accès distant sécurisé à un laboratoire Proxmox par VPN WireGuard : entrée par le Wi-Fi, routage par politique, DNS dynamique et accès au LAN</h1>
-<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Tests : 5 réussis sur 7</span><span class="chip">Laboratoire personnel sur matériel réel : serveur Proxmox VE, routeur Huawei, client mobile</span></div>
+<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Tests : 6 réussis sur 7</span><span class="chip">Laboratoire personnel sur matériel réel : serveur Proxmox VE, routeur Huawei, client mobile</span></div>
 <aside>
-<p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles.</b> Deux points restent ouverts et sont décrits sans les masquer : la mise à jour automatique du DNS dynamique a renvoyé une erreur dont la cause est identifiée (correction à valider), et le test de redémarrage complet du serveur n'a pas encore été fait.</p>
-<p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche.</p>
+<p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles, avec accès au serveur et au LAN du domicile.</b> Un point reste ouvert et il est décrit sans être masqué : le test de redémarrage complet du serveur n'a pas encore été fait. La mise à jour automatique du DNS dynamique, qui avait d'abord renvoyé une erreur, est corrigée et validée.</p>
+<p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche. Sur les captures d'écran, l'adresse IP publique, le nom du tunnel (identique au sous-domaine) et un nom d'utilisateur du routeur sont masqués.</p>
 </aside>
 
 <h2 id="sommaire">Sommaire</h2>
@@ -42,8 +42,9 @@
 <li>1 tunnel WireGuard, 1 pair (le téléphone), 1 seul port exposé sur Internet : <code>UDP 51820</code>.</li>
 <li>3 réseaux atteignables depuis le tunnel : <code>10.10.10.0/24</code> (le VPN), <code>192.168.100.0/24</code> (LAN du domicile) et <code>192.168.137.0/24</code> (réseau de gestion, tant que le PC est allumé).</li>
 <li>Handshake observé sur la capture : 3 paquets UDP de 148, 92 et 32 octets, puis <code>latest handshake</code> de 59 secondes avec du trafic dans les deux sens.</li>
+<li>Test depuis le téléphone en données mobiles : 9 pings sur 9 reçus vers le routeur (<code>192.168.100.1</code>), 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms).</li>
 <li>Mise à jour DNS prévue toutes les 5 minutes par une tâche planifiée.</li>
-<li>7 tests : 5 réussis, 1 écart ouvert (mise à jour DNS), 1 non réalisé (redémarrage).</li>
+<li>7 tests : 6 réussis, 1 non réalisé (redémarrage).</li>
 </ul>
 <p>Périmètre exclu : plusieurs clients, filtrage fin du trafic issu du tunnel et supervision du tunnel (voir <a href="#evolutions">Évolutions</a>).</p>
 
@@ -161,6 +162,7 @@ PublicKey = &lt;clé publique du serveur&gt;
 Endpoint = &lt;sous-domaine&gt;.duckdns.org:51820
 AllowedIPs = 10.10.10.0/24, 192.168.100.0/24, 192.168.137.0/24
 PersistentKeepalive = 25</code></pre>
+<figure><img loading="lazy" src="assets/wireguard-app-tunnel-actif.jpg" alt="Application WireGuard du téléphone : un tunnel est activé, son nom est masqué"><figcaption>Application WireGuard sur le téléphone : le tunnel est activé et l'icône de clé de la barre d'état indique une connexion VPN. Le nom du tunnel, identique au sous-domaine DuckDNS, est masqué.</figcaption></figure>
 
 <h2 id="tests">4. Tests et validation</h2>
 <p>Les tests sont menés depuis le téléphone en données mobiles (jamais depuis le Wi-Fi du domicile, qui ne prouve rien sur l'accès extérieur) et depuis le serveur. Verdicts possibles : Réussi, Écart ouvert, Non réalisé.</p>
@@ -190,7 +192,7 @@ PersistentKeepalive = 25</code></pre>
 <ul>
 <li><b>Procédure :</b> <code>tcpdump -ni wlo1 udp port 51820</code> pendant l'activation du tunnel sur le téléphone, puis <code>wg show</code>.</li>
 <li><b>Attendu :</b> un échange de handshake sur <code>wlo1</code>, puis un <code>latest handshake</code> récent côté serveur.</li>
-<li><b>Observé :</b> trois paquets : 148 octets du téléphone vers le serveur (initiation), 92 octets en réponse, 32 octets du téléphone (premier keepalive). Puis un handshake de 59 secondes avec du trafic dans les deux sens. <b>Verdict : Réussi.</b></li>
+<li><b>Observé :</b> trois paquets : 148 octets du téléphone vers le serveur (initiation), 92 octets en réponse, 32 octets du téléphone (premier keepalive). Puis un handshake de 59 secondes avec du trafic dans les deux sens. Côté téléphone, l'application affiche le tunnel actif et l'adresse du téléphone est <code>10.10.10.2</code>. <b>Verdict : Réussi.</b></li>
 </ul>
 <pre><code>01:59:01.260922 IP &lt;IP mobile&gt;.34661 &gt; 192.168.100.62.51820: UDP, length 148
 01:59:01.261299 IP 192.168.100.62.51820 &gt; &lt;IP mobile&gt;.34661: UDP, length 92
@@ -204,19 +206,27 @@ peer: &lt;clé publique du téléphone&gt;
   allowed ips: 10.10.10.2/32
   latest handshake: 59 seconds ago
   transfer: 83.34 KiB received, 441.58 KiB sent</code></pre>
+<figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-telephone-tunnel.jpg" alt="Informations sur le statut du téléphone : adresse IP 10.10.10.2"><figcaption>État du téléphone avec le tunnel actif : l'adresse IP est celle du plan d'adressage du VPN, <code>10.10.10.2</code> (encadrée).</figcaption></figure>
 
 <h3>Test 5 — Accès au LAN du domicile à travers le tunnel</h3>
 <ul>
-<li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.168.100.1</code>), après ajout du NAT sur <code>wlo1</code> et de <code>192.168.100.0/24</code> dans <code>AllowedIPs</code>.</li>
+<li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.168.100.1</code>) et lancer un ping vers cette adresse, après ajout du NAT sur <code>wlo1</code> et de <code>192.168.100.0/24</code> dans <code>AllowedIPs</code>.</li>
 <li><b>Attendu :</b> la page du routeur répond ; sur le serveur, les paquets sortent par <code>wlo1</code> avec la source <code>192.168.100.62</code>.</li>
-<li><b>Observé :</b> accès au LAN confirmé depuis le téléphone. Pas de capture dédiée de ce test. <b>Verdict : Réussi.</b></li>
+<li><b>Observé :</b> la page de connexion, puis l'accueil de l'interface d'administration du routeur (modèle HG8145V6), s'ouvrent depuis le téléphone en données mobiles. Le ping aboutit : 9 paquets sur 9, 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms) sur la liaison mobile. Le TTL de 63, au lieu de 64, montre que les paquets traversent un saut de routage, l'hôte Proxmox. La sortie par <code>wlo1</code> avec la source <code>192.168.100.62</code> n'a pas été capturée sur le serveur : elle se déduit de la réponse du routeur, qui ne connaît pas le réseau <code>10.10.10.0/24</code>. <b>Verdict : Réussi.</b></li>
 </ul>
+<div class="evidence-grid" aria-label="Captures du test d'accès au LAN depuis le téléphone">
+<figure><img loading="lazy" src="assets/wireguard-routeur-login-via-vpn.jpg" alt="Page de connexion du routeur Huawei ouverte depuis le téléphone à travers le VPN"><figcaption>Page de connexion du routeur, ouverte depuis le téléphone en données mobiles à travers le tunnel.</figcaption></figure>
+<figure><img loading="lazy" src="assets/wireguard-routeur-accueil-via-vpn.jpg" alt="Accueil de l'interface d'administration du routeur, état de connexion Internet normal"><figcaption>Accueil de l'interface d'administration après connexion, état de la connexion Internet « normal ». Le nom d'utilisateur affiché en haut à droite est masqué.</figcaption></figure>
+<figure><img loading="lazy" src="assets/wireguard-ping-routeur-lan.jpg" alt="Ping vers 192.168.100.1 : 9 paquets envoyés, 9 reçus, 0 % de perte"><figcaption>Ping vers <code>192.168.100.1</code> : 9 paquets envoyés, 9 reçus, 0 % de perte, latence de 143 à 205 ms, TTL 63.</figcaption></figure>
+</div>
+<p><b>Observation complémentaire : seul le trafic déclaré passe par le tunnel.</b> Un site de test d'adresse IP, consulté depuis le téléphone avec le tunnel actif (icône de clé dans la barre d'état), affiche une adresse publique différente de celle du routeur du domicile. La navigation ordinaire du téléphone ne passe donc pas par le tunnel, conformément aux <code>AllowedIPs</code> qui ne déclarent que les trois réseaux du laboratoire.</p>
+<figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-publique-hors-tunnel.jpg" alt="Site de test d'adresse IP consulté depuis le téléphone, adresse publique masquée"><figcaption>Adresse publique vue par un site externe depuis le téléphone, tunnel actif. L'adresse est masquée.</figcaption></figure>
 
 <h3>Test 6 — DNS dynamique</h3>
 <ul>
 <li><b>Procédure :</b> <code>nslookup</code> du sous-domaine, lecture de <code>/opt/duckdns/duck.log</code> et de <code>crontab -l</code>.</li>
 <li><b>Attendu :</b> résolution vers l'adresse publique, journal à <code>OK</code>, une seule ligne planifiée.</li>
-<li><b>Observé :</b> la résolution renvoie la bonne adresse et la tâche planifiée est unique, mais le journal affiche <code>KO</code> : le script contenait un point en trop après le nom du sous-domaine (voir INC-005). La correction est identifiée ; le passage à <code>OK</code> reste à constater. <b>Verdict : Écart ouvert.</b></li>
+<li><b>Observé :</b> la résolution renvoie la bonne adresse et la tâche planifiée est unique. Un premier passage a donné <code>KO</code> à cause d'un point en trop après le nom du sous-domaine dans le script (voir INC-005) ; après correction, le journal affiche <code>OK</code>. Ce résultat est constaté sur le serveur, sans capture jointe. <b>Verdict : Réussi.</b></li>
 </ul>
 
 <h3>Test 7 — Redémarrage du serveur</h3>
@@ -233,9 +243,9 @@ peer: &lt;clé publique du téléphone&gt;
 <tr><td>1</td><td>Association Wi-Fi de <code>wlo1</code></td><td><span class="badge ok">Réussi</span></td><td>Sortie de <code>wpa_cli</code></td></tr>
 <tr><td>2</td><td>Sortie Internet par le Wi-Fi</td><td><span class="badge ok">Réussi</span></td><td>Sortie de <code>curl</code></td></tr>
 <tr><td>3</td><td>Absence de CGNAT</td><td><span class="badge ok">Réussi</span></td><td>Comparaison des adresses WAN</td></tr>
-<tr><td>4</td><td>Tunnel depuis les données mobiles</td><td><span class="badge ok">Réussi</span></td><td>Capture <code>tcpdump</code> et <code>wg show</code></td></tr>
-<tr><td>5</td><td>Accès au LAN par le tunnel</td><td><span class="badge ok">Réussi</span></td><td>Pas de capture dédiée</td></tr>
-<tr><td>6</td><td>DNS dynamique</td><td><span class="badge wip">Écart ouvert</span></td><td>Journal <code>KO</code> à rejouer</td></tr>
+<tr><td>4</td><td>Tunnel depuis les données mobiles</td><td><span class="badge ok">Réussi</span></td><td>Captures <code>tcpdump</code>, <code>wg show</code> et état du téléphone</td></tr>
+<tr><td>5</td><td>Accès au LAN par le tunnel</td><td><span class="badge ok">Réussi</span></td><td>Captures du routeur et du ping</td></tr>
+<tr><td>6</td><td>DNS dynamique</td><td><span class="badge ok">Réussi</span></td><td>Journal <code>OK</code> après correction (sans capture)</td></tr>
 <tr><td>7</td><td>Redémarrage complet</td><td><span class="badge plan">Non réalisé</span></td><td>À faire</td></tr>
 </tbody></table>
 
@@ -275,8 +285,9 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Symptôme :</b> <code>/opt/duckdns/duck.log</code> contient <code>KO</code>, alors que la résolution DNS renvoie la bonne adresse (enregistrée plus tôt).</li>
 <li><b>Cause :</b> le paramètre <code>domains=</code> du script se terminait par un point (<code>nom.</code>), que DuckDNS ne reconnaît pas. Le nom doit être donné sans point et sans <code>.duckdns.org</code>.</li>
 <li><b>Risque :</b> sans mise à jour réussie, le jour où l'adresse publique change, le nom pointe vers l'ancienne adresse et le VPN cesse de fonctionner sans avertissement.</li>
-<li><b>Correction :</b> retrait du point dans le script avec <code>sed</code>. Le passage du journal à <code>OK</code> reste à constater.</li>
-<li><b>Statut :</b> correction identifiée, à valider.</li>
+<li><b>Correction :</b> retrait du point dans le script avec <code>sed</code>. Le journal affiche ensuite <code>OK</code>.</li>
+<li><b>Enseignement :</b> lire le journal de la tâche de mise à jour juste après l'installation, au lieu de supposer qu'elle fonctionne parce que le nom résout déjà vers la bonne adresse.</li>
+<li><b>Statut :</b> résolu.</li>
 </ul>
 
 <h2 id="securite">6. Sécurité et points d'attention</h2>
@@ -313,31 +324,31 @@ peer: &lt;clé publique du téléphone&gt;
 <ul>
 <li>Un seul lien Wi-Fi sans redondance, et un seul serveur : si l'un tombe, le VPN tombe.</li>
 <li>Le réseau de gestion <code>192.168.137.0/24</code> n'est atteignable que si le PC auquel <code>vmbr0</code> est relié est allumé ; seules <code>10.10.10.1</code> et le LAN du domicile sont joignables en permanence.</li>
-<li>La mise à jour de l'adresse publique n'est pas encore validée : un changement d'adresse coupe le VPN tant que le journal DuckDNS n'affiche pas <code>OK</code>.</li>
+<li>Un vrai changement d'adresse publique n'a pas été observé : la mise à jour fonctionne, mais la tâche ne s'exécute que toutes les 5 minutes, donc une coupure de cette durée est possible après un changement.</li>
 <li>Persistance au redémarrage non prouvée (test 7) : le conflit entre instances de <code>wpa_supplicant</code> pourrait réapparaître.</li>
 <li>Aucun filtrage spécifique sur le trafic du tunnel.</li>
 <li>Un seul client, aucune rotation de clés documentée.</li>
-<li>Débit et latence du tunnel non mesurés ; le Wi-Fi 2.4 GHz est le facteur limitant probable.</li>
+<li>Débit non mesuré. La latence relevée depuis le téléphone est de 143 à 205 ms sur liaison mobile (moyenne 185 ms) ; je n'ai pas isolé la part du réseau mobile et celle du Wi-Fi 2,4 GHz du serveur.</li>
 </ul>
 
 <h2 id="evolutions">9. Évolutions envisagées</h2>
 <ol>
-<li><b>Valider la persistance :</b> constater <code>OK</code> dans le journal DuckDNS, puis redémarrer le serveur et rejouer les contrôles du test 7.</li>
+<li><b>Valider la persistance :</b> redémarrer le serveur et rejouer les contrôles du test 7.</li>
 <li><b>Atteindre les machines virtuelles sans dépendre du PC :</b> les placer sur un pont interne sans port physique, relié par routage, au lieu de <code>vmbr0</code>.</li>
 <li><b>Durcir le trafic issu du tunnel :</b> n'autoriser que les services utiles (interface Proxmox, SSH, éventuellement quelques hôtes du LAN) par des règles de pare-feu sur <code>wg0</code>.</li>
 </ol>
 
 <h2 id="cloture">10. Contrôle de clôture</h2>
 <ul>
-<li>Tests réussis : 5 / 7</li>
+<li>Tests réussis : 6 / 7</li>
 <li>Tests échoués : 0</li>
-<li>Écart ouvert : 1 (mise à jour DuckDNS, correction à valider)</li>
+<li>Écart ouvert : 0</li>
 <li>Test non réalisé : 1 (redémarrage complet)</li>
-<li>Preuves : captures de terminal anonymisées (<code>tcpdump</code>, <code>wg show</code>, <code>ip route</code>, <code>wpa_cli</code>) et capture du formulaire de redirection ; le test 5 n'a pas de capture dédiée.</li>
+<li>Preuves : captures de terminal anonymisées (<code>tcpdump</code>, <code>wg show</code>, <code>ip route</code>, <code>wpa_cli</code>), capture du formulaire de redirection et captures d'écran du téléphone (application WireGuard, adresse du tunnel, ping, accès au routeur, test d'adresse IP) ; le journal DuckDNS à <code>OK</code> n'a pas de capture.</li>
 <li>Panne contrôlée testée : Non</li>
 <li>Limites et risques résiduels documentés : Oui</li>
 <li>Décision : Fonctionnel, à consolider</li>
-<li>Prochaine action concrète : constater le journal DuckDNS à <code>OK</code>, puis redémarrer le serveur et valider le retour automatique du tunnel</li>
+<li>Prochaine action concrète : redémarrer le serveur et valider le retour automatique du tunnel</li>
 </ul>
 <p><b>Règle de statut :</b> « Fonctionnel » décrit ce qui a été observé en test. Il ne couvre ni la persistance après redémarrage, ni le changement d'adresse publique, qui restent des actions ouvertes.</p>
 <hr />
@@ -367,8 +378,8 @@ peer: &lt;clé publique du téléphone&gt;
 <h2 id="itil-4-validation">4. Validation et mise en service</h2>
 <ul>
 <li>☑ Handshake observé en capture depuis les données mobiles.</li>
-<li>☑ Accès au LAN du domicile confirmé à travers le tunnel.</li>
-<li>☑ Cinq tests sur sept réussis ; l'écart et le test restant sont nommés.</li>
+<li>☑ Accès au LAN du domicile confirmé à travers le tunnel (page du routeur et ping depuis le téléphone).</li>
+<li>☑ Six tests sur sept réussis ; le test restant est nommé.</li>
 </ul>
 <h2 id="itil-5-documentation">5. Documentation et amélioration</h2>
 <ul>
@@ -379,15 +390,15 @@ peer: &lt;clé publique du téléphone&gt;
 <h2 id="itil-6-limites">6. Limites et actions non démontrées par les preuves actuelles</h2>
 <ul>
 <li>Le retour automatique du tunnel après redémarrage du serveur n'est pas démontré.</li>
-<li>La mise à jour automatique de l'adresse publique n'est pas démontrée tant que le journal DuckDNS n'affiche pas <code>OK</code>.</li>
+<li>Le comportement lors d'un changement réel d'adresse publique n'est pas démontré : la tâche de mise à jour fonctionne, mais aucun changement d'adresse n'a été observé.</li>
 <li>Aucun scénario de panne (perte du lien Wi-Fi, changement d'adresse publique) n'est testé.</li>
-<li>Aucune mesure de débit ou de latence, aucun filtrage du trafic issu du tunnel, aucune supervision du tunnel.</li>
+<li>Aucune mesure de débit, aucun filtrage du trafic issu du tunnel, aucune supervision du tunnel.</li>
 <li>Aucune procédure formelle de changement, de retour arrière ou de rotation des clés n'est fournie.</li>
 </ul>
 <h2 id="itil-7-bilan">7. Bilan de clôture</h2>
 <ul>
 <li><strong>Statut :</strong> fonctionnel pour le périmètre testé : accès distant au serveur et au LAN du domicile depuis un téléphone en données mobiles.</li>
-<li><strong>Preuves principales :</strong> capture du handshake, sortie de <code>wg show</code>, tables de routage, formulaire de redirection de port.</li>
+<li><strong>Preuves principales :</strong> capture du handshake, sortie de <code>wg show</code>, tables de routage, formulaire de redirection de port, captures d'écran du téléphone (adresse du tunnel, ping et page du routeur).</li>
 <li><strong>Réserve :</strong> le statut Fonctionnel ne signifie ni que le tunnel survit à un redémarrage, ni qu'il survit à un changement d'adresse publique.</li>
 <li><strong>Référentiel :</strong> pratiques de documentation, configuration, validation et amélioration inspirées d'ITIL 4 ; aucune conformité formelle n'est revendiquée.</li>
 </ul>
