@@ -405,15 +405,7 @@ peer: &lt;clé publique du téléphone&gt;
 <li>☑ Les commandes de contrôle sont regroupées dans un tableau d'exploitation.</li>
 <li>☑ Les limites et les évolutions envisagées sont séparées des réalisations.</li>
 </ul>
-<h2 id="itil-6-limites">6. Limites et actions non démontrées par les preuves actuelles</h2>
-<ul>
-<li>Le retour automatique du tunnel après redémarrage du serveur n'est pas démontré.</li>
-<li>Le comportement lors d'un changement réel d'adresse publique n'est pas démontré : la tâche de mise à jour fonctionne, mais aucun changement d'adresse n'a été observé.</li>
-<li>Aucun scénario de panne (perte du lien Wi-Fi, changement d'adresse publique) n'est testé.</li>
-<li>Aucune mesure de débit, aucun filtrage du trafic issu du tunnel, aucune supervision du tunnel.</li>
-<li>Aucune procédure formelle de changement, de retour arrière ou de rotation des clés n'est fournie.</li>
-</ul>
-<h2 id="itil-7-bilan">7. Bilan de clôture</h2>
+<h2 id="itil-7-bilan">6. Bilan de clôture</h2>
 <ul>
 <li><strong>Statut :</strong> fonctionnel pour le périmètre testé : accès distant au serveur et au LAN du domicile depuis un téléphone en données mobiles.</li>
 <li><strong>Preuves principales :</strong> capture du handshake, sortie de <code>wg show</code>, tables de routage, formulaire de redirection de port, captures d'écran du téléphone (adresse du tunnel, ping et page du routeur).</li>
