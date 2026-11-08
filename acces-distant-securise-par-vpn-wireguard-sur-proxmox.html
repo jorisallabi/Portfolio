@@ -1,14 +1,14 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Accès distant sécurisé à un laboratoire Proxmox par VPN WireGuard : entrée par le Wi-Fi, routage par politique, DNS dynamique et accès au LAN — Joris Allabi</title><meta name="description" content="VPN WireGuard installé sur l'hôte Proxmox, joignable par le Wi-Fi quand le PC de gestion est éteint : routage par politique, NAT vers le LAN, DuckDNS et redirection de port. Tests, incidents et limites documentés.">
+<title>VPN WireGuard sur serveur Proxmox physique : accès distant au véritable LAN domestique — Joris Allabi</title><meta name="description" content="Déploiement réel de WireGuard sur un ancien PC reconverti en serveur Proxmox (Intel Core i5 10e génération, 12 Go RAM, SSD 500 Go). Accès distant chiffré au véritable réseau domestique, avec routage, NAT, DuckDNS et tests depuis les données mobiles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
 <header class="top"><div class="wrap bar"><a class="brand" href="index.html">Joris Allabi</a>
 <nav><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
-<h1>Accès distant sécurisé à un laboratoire Proxmox par VPN WireGuard : entrée par le Wi-Fi, routage par politique, DNS dynamique et accès au LAN</h1>
-<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Tests : 6 réussis sur 7</span><span class="chip">Laboratoire personnel sur matériel réel : serveur Proxmox VE, routeur Huawei, client mobile</span></div>
+<h1>VPN WireGuard sur serveur Proxmox physique : accéder à son véritable réseau domestique depuis l'extérieur</h1>
+<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Déploiement sur matériel physique</span><span class="chip">6 tests réussis sur 7</span><span class="chip">Véritable LAN domestique · routeur Huawei · téléphone en 4G/5G</span></div>
 <aside>
 <p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles, avec accès au serveur et au LAN du domicile.</b> Un point reste ouvert et il est décrit sans être masqué : le test de redémarrage complet du serveur n'a pas encore été fait. La mise à jour automatique du DNS dynamique, qui avait d'abord renvoyé une erreur, est corrigée et validée.</p>
 <p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche. Sur les captures d'écran, l'adresse IP publique, le nom du tunnel (identique au sous-domaine) et un nom d'utilisateur du routeur sont masqués.</p>
@@ -30,6 +30,23 @@
 </ol>
 
 <h2 id="resume">Résumé exécutif</h2>
+<p><b>Ce projet est une réalisation sur infrastructure réelle, pas une simulation.</b> J'ai reconverti un ancien ordinateur en serveur personnel, installé Proxmox VE directement sur son matériel et déployé WireGuard pour répondre à un besoin concret : pouvoir rejoindre mon réseau domestique depuis l'extérieur, sans exposer directement les interfaces d'administration sur Internet.</p>
+<div class="project-callout">
+<h3>Un serveur physique, un réseau réel, un service utile</h3>
+<table>
+<thead><tr><th>Élément</th><th>Environnement réellement utilisé</th></tr></thead>
+<tbody>
+<tr><td>Serveur physique</td><td>Ancien PC reconverti en serveur dédié</td></tr>
+<tr><td>Processeur</td><td>Intel Core i5 de 10e génération</td></tr>
+<tr><td>Mémoire vive</td><td>12 Go RAM</td></tr>
+<tr><td>Stockage</td><td>SSD 500 Go</td></tr>
+<tr><td>Hyperviseur</td><td>Proxmox VE installé directement sur le matériel (bare metal)</td></tr>
+<tr><td>VPN</td><td>WireGuard déployé sur l'hôte Proxmox</td></tr>
+<tr><td>Réseau desservi</td><td>Véritable LAN du domicile, derrière le routeur Huawei</td></tr>
+<tr><td>Client distant testé</td><td>Téléphone connecté en données mobiles, hors du Wi-Fi domestique</td></tr>
+</tbody></table>
+<p>Le matériel n'est pas un décor autour d'un schéma : c'est le serveur qui fonctionne réellement sur mon réseau et qui héberge le service d'accès distant. Le tunnel a été établi depuis l'extérieur et l'accès au routeur du domicile a été vérifié à travers celui-ci.</p>
+</div>
 <table>
 <thead><tr><th>Contexte</th><th>Problématique</th><th>Objectif</th></tr></thead>
 <tbody><tr>
@@ -63,6 +80,7 @@
 </tbody></table>
 
 <h2 id="architecture">2. Architecture et plan d'adressage</h2>
+<p>La topologie repose sur des équipements et des liaisons physiques de mon domicile. Le serveur Proxmox est raccordé au réseau réel par son interface Wi-Fi ; son interface Ethernet est utilisée pour un réseau de gestion distinct. Le routeur Huawei assure l'accès Internet et la redirection du seul port WireGuard.</p>
 <p>Le téléphone se connecte en données mobiles au nom DuckDNS, qui pointe vers l'adresse publique du routeur Huawei. Le routeur redirige le port UDP 51820 vers l'interface Wi-Fi du serveur, où <code>wg0</code> termine le tunnel. De là, le trafic est routé vers le LAN du domicile (par le Wi-Fi) ou vers le réseau de gestion (par <code>vmbr0</code>).</p>
 <figure class="embed"><iframe src="assets/schema-vpn-wireguard-proxmox.html" loading="lazy" title="Schéma d'architecture du VPN WireGuard sur Proxmox"></iframe><figcaption><a href="assets/schema-vpn-wireguard-proxmox.html" target="_blank" rel="noopener">Ouvrir le schéma en plein écran ↗</a></figcaption></figure>
 <h3>Plan d'adressage</h3>
@@ -403,6 +421,6 @@ peer: &lt;clé publique du téléphone&gt;
 <li><strong>Référentiel :</strong> pratiques de documentation, configuration, validation et amélioration inspirées d'ITIL 4 ; aucune conformité formelle n'est revendiquée.</li>
 </ul>
 <hr /></main>
-<footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
+<footer><div class="wrap">© 2026 Joris Allabi · Infrastructure personnelle réelle et laboratoires techniques.</div></footer>
 <script src="assets/portfolio.js" defer></script>
 </body></html>
