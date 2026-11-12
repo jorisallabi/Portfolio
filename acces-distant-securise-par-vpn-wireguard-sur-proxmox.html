@@ -8,7 +8,7 @@
 <nav><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
 <h1>VPN WireGuard sur serveur Proxmox physique : accéder à son véritable réseau domestique depuis l'extérieur</h1>
-<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Déploiement sur matériel physique</span><span class="chip">6 tests réussis sur 7</span><span class="chip">Véritable LAN domestique · routeur Huawei · téléphone en 4G/5G</span></div>
+<div class="meta"><span class="badge wip">Fonctionnel · à consolider</span><span class="chip">Déploiement sur matériel physique</span><span class="chip">7 tests réussis sur 8</span><span class="chip">Véritable LAN domestique · routeur Huawei · téléphone en 4G/5G</span></div>
 <aside>
 <p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles, avec accès au serveur et au LAN du domicile.</b> Un point reste ouvert et il est décrit sans être masqué : le test de redémarrage complet du serveur n'a pas encore été fait. La mise à jour automatique du DNS dynamique, qui avait d'abord renvoyé une erreur, est corrigée et validée.</p>
 <p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche. Sur les captures d'écran, l'adresse IP publique, le nom du tunnel (identique au sous-domaine) et un nom d'utilisateur du routeur sont masqués.</p>
@@ -61,7 +61,7 @@
 <li>Handshake observé sur la capture : 3 paquets UDP de 148, 92 et 32 octets, puis <code>latest handshake</code> de 59 secondes avec du trafic dans les deux sens.</li>
 <li>Test depuis le téléphone en données mobiles : 9 pings sur 9 reçus vers le routeur (<code>192.168.100.1</code>), 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms).</li>
 <li>Mise à jour DNS prévue toutes les 5 minutes par une tâche planifiée.</li>
-<li>7 tests : 6 réussis, 1 non réalisé (redémarrage).</li>
+<li>8 tests : 7 réussis, 1 non réalisé (redémarrage).</li>
 </ul>
 <p>Périmètre exclu : plusieurs clients, filtrage fin du trafic issu du tunnel et supervision du tunnel (voir <a href="#evolutions">Évolutions</a>).</p>
 
@@ -254,6 +254,14 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Observé :</b> test pas encore exécuté. <b>Verdict : Non réalisé.</b></li>
 </ul>
 
+
+<h3>Test 8 — Accès au poste Windows du LAN depuis un réseau Wi-Fi externe (RDP)</h3>
+<ul>
+<li><b>Contexte :</b> le laptop est d'abord connecté à un réseau Wi-Fi extérieur au domicile, avec l'adresse <code>192.168.158.162</code>. Le poste Windows de destination est sur le LAN domestique, à l'adresse <code>192.168.100.109</code>.</li>
+<li><b>Avant activation du VPN :</b> le ping vers <code>192.168.100.109</code> échoue et le poste est inaccessible par le Bureau à distance (RDP). Ce comportement est attendu : le réseau externe ne dispose pas de route vers le LAN privé du domicile.</li>
+<li><b>Après activation de WireGuard :</b> le ping vers le poste répond, la session Bureau à distance s'établit et l'interface d'administration du routeur domestique reste accessible depuis le laptop.</li>
+<li><b>Résultat :</b> l'accès à un poste utilisateur Windows et à l'interface du routeur est validé depuis un second type de client distant, connecté à un réseau tiers. Ce test complète le test mobile précédent en vérifiant un usage concret d'administration à distance, au-delà de la seule connectivité vers le routeur. <b>Verdict : Réussi.</b></li>
+</ul>
 <h3>Synthèse</h3>
 <table>
 <thead><tr><th>#</th><th>Test</th><th>Verdict</th><th>Preuve</th></tr></thead>
@@ -265,6 +273,7 @@ peer: &lt;clé publique du téléphone&gt;
 <tr><td>5</td><td>Accès au LAN par le tunnel</td><td><span class="badge ok">Réussi</span></td><td>Captures du routeur et du ping</td></tr>
 <tr><td>6</td><td>DNS dynamique</td><td><span class="badge ok">Réussi</span></td><td>Journal <code>OK</code> après correction (sans capture)</td></tr>
 <tr><td>7</td><td>Redémarrage complet</td><td><span class="badge plan">Non réalisé</span></td><td>À faire</td></tr>
+<tr><td>8</td><td>Accès au poste Windows distant (ping + RDP) depuis un Wi-Fi externe</td><td><span class="badge ok">Réussi</span></td><td>Ping, session RDP et accès au routeur depuis le laptop connecté au VPN</td></tr>
 </tbody></table>
 
 <h2 id="incidents">5. Incidents et retour d'expérience</h2>
@@ -358,7 +367,7 @@ peer: &lt;clé publique du téléphone&gt;
 
 <h2 id="cloture">10. Contrôle de clôture</h2>
 <ul>
-<li>Tests réussis : 6 / 7</li>
+<li>Tests réussis : 7 / 8</li>
 <li>Tests échoués : 0</li>
 <li>Écart ouvert : 0</li>
 <li>Test non réalisé : 1 (redémarrage complet)</li>
@@ -397,7 +406,7 @@ peer: &lt;clé publique du téléphone&gt;
 <ul>
 <li>☑ Handshake observé en capture depuis les données mobiles.</li>
 <li>☑ Accès au LAN du domicile confirmé à travers le tunnel (page du routeur et ping depuis le téléphone).</li>
-<li>☑ Six tests sur sept réussis ; le test restant est nommé.</li>
+<li>☑ Sept tests sur huit réussis ; le test restant est nommé.</li>
 </ul>
 <h2 id="itil-5-documentation">5. Documentation et amélioration</h2>
 <ul>
