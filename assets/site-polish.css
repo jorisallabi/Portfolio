@@ -125,3 +125,14 @@ footer{border-color:var(--line);background:transparent}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Images de preuves : aperçu discret au survol, agrandissement au clic. */
+.article figure img,.article>img,.article .evidence-grid img{display:block;max-width:100%;height:auto;cursor:zoom-in;transform:translateZ(0);transition:transform .22s ease,border-color .22s ease,filter .22s ease}
+.article figure img:hover,.article>img:hover,.article .evidence-grid img:hover{transform:scale(1.025);border-color:rgba(255,255,255,.38);filter:brightness(1.06)}
+.image-lightbox{width:min(94vw,1440px);max-width:94vw;max-height:94vh;padding:48px 18px 18px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:#101010;color:#eee;box-shadow:0 24px 90px rgba(0,0,0,.72)}
+.image-lightbox::backdrop{background:rgba(0,0,0,.88);backdrop-filter:blur(5px)}
+.image-lightbox img{display:block;max-width:100%;max-height:calc(94vh - 90px);width:auto;height:auto;object-fit:contain;margin:auto;border:0;border-radius:6px;cursor:zoom-out}
+.image-lightbox figcaption{margin:12px auto 0;max-width:900px;text-align:center;color:#aaa;font:11px/1.5 var(--mono)}
+.image-lightbox-close{position:absolute;top:10px;right:12px;width:34px;height:34px;border:1px solid var(--line-strong);border-radius:50%;background:#1a1a1a;color:#fff;font:20px/1 var(--sans);cursor:pointer}
+.image-lightbox-close:hover{background:#333;transform:scale(1.05)}
+@media(hover:none){.article figure img:hover,.article>img:hover,.article .evidence-grid img:hover{transform:none;filter:none}}
