@@ -1,0 +1,13 @@
+.atlas-page{min-height:100vh}
+.atlas-standalone{max-width:1120px;padding-top:34px;padding-bottom:90px}
+.atlas-standalone .crumb{margin:0 0 24px;font-size:13px;color:#aaa}
+.atlas-standalone .crumb a{color:#ddd;text-decoration:none}
+.atlas-standalone .atlas-modal-body{padding:clamp(20px,4vw,52px);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(14,14,14,.88)}
+.atlas-standalone .atlas-modal-nav a{color:#bbb}
+.atlas-standalone .atlas-modal-nav a:hover{color:#fff}
+.atlas-standalone .atlas-section{scroll-margin-top:100px}
+.atlas-standalone .atlas-modal-foot button{display:none}
+.atlas-standalone .atlas-modal-foot:after{content:"Retour au portfolio";font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#ddd}
+.atlas-featured{display:flex;text-decoration:none}
+.atlas-featured:focus-visible{outline:2px solid #fff;outline-offset:5px}
+@media(max-width:680px){.atlas-standalone{padding-top:22px;padding-bottom:54px}.atlas-standalone .atlas-modal-body{padding:22px 17px}}
