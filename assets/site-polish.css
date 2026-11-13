@@ -136,3 +136,8 @@ footer{border-color:var(--line);background:transparent}
 .image-lightbox-close{position:absolute;top:10px;right:12px;width:34px;height:34px;border:1px solid var(--line-strong);border-radius:50%;background:#1a1a1a;color:#fff;font:20px/1 var(--sans);cursor:pointer}
 .image-lightbox-close:hover{background:#333;transform:scale(1.05)}
 @media(hover:none){.article figure img:hover,.article>img:hover,.article .evidence-grid img:hover{transform:none;filter:none}}
+
+/* Micro-interactions sur les cartes et lignes de projets. */
+.project-card:hover{transform:translateY(-3px) scale(1.012)}
+.project-row:hover,.atlas-featured:hover{transform:translateY(-2px) scale(1.008);border-color:rgba(255,255,255,.28)}
+@media(prefers-reduced-motion:reduce){.article figure img,.article>img,.article .evidence-grid img,.project-card,.project-row,.atlas-featured{transform:none!important}}
