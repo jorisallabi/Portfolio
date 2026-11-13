@@ -15,7 +15,7 @@
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const targets = document.querySelectorAll(
-    '.section-head, .project-card, .project-row, .capability, .about-layout, .method-step, .contact-panel, .article > h1, .article > h2, .article > p, .article > figure, .article > table, .article > ul, .article > pre, .article > aside'
+    '.section-head, .project-card, .project-row, .capability, .about-layout, .method-step, .contact-panel, .article > h1, .article > h2, .article > p, .article > figure, .article > table, .article > ul, .article > pre, .article > aside, .atlas-section'
   );
   targets.forEach((el) => el.setAttribute('data-reveal', ''));
   if (!reduceMotion && 'IntersectionObserver' in window) {
