@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Déploiement d’une Infrastructure VoIP Hybride Cisco CME (SCCP &amp; SIP) en Environnement Virtualisé — Joris Allabi</title><meta name="description" content="Laboratoire GNS3 terminé en 2026 : routeur Cisco 3725 avec CME, terminaux SCCP et SIP (Linphone sur Android), DHCP option 150 et priorisation du trafic voi">
+<title>Déploiement d’une Infrastructure VoIP Hybride Cisco CME (SCCP &amp; SIP) en Environnement Virtualisé : Joris Allabi</title><meta name="description" content="Laboratoire GNS3 terminé en 2026 : routeur Cisco 3725 avec CME, terminaux SCCP et SIP (Linphone sur Android), DHCP option 150 et priorisation du trafic voi">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
@@ -11,7 +11,7 @@
 <div class="meta"><span class="badge ok">Livré</span><span class="chip">Avancement 100%</span><span class="chip">Laboratoire GNS3</span></div>
 <h3 id="presentation-rapide">Présentation rapide</h3>
 <p>Ce projet d'infrastructure réseau et télécom porte sur la conception, l'interconnexion et la configuration d'une plateforme VoIP centralisée sur un routeur Cisco 3725 exécutant Cisco CallManager Express (CME). L'architecture prend en charge un ensemble mixte de terminaux clients utilisant deux protocoles de signalisation distincts : <strong>SCCP</strong> (<em>Skinny Client Control Protocol</em>) et <strong>SIP</strong> (<em>Session Initiation Protocol</em>).</p>
-<p>Le laboratoire porte également sur l'intégration d'un réseau virtuel hébergé sous GNS3 à un sous-réseau physique Wi-Fi/LAN, afin de permettre à des terminaux mobiles réels — des smartphones Android exécutant Linphone — de s'enregistrer auprès du Registrar SIP du routeur d'infrastructure.</p>
+<p>Le laboratoire porte également sur l'intégration d'un réseau virtuel hébergé sous GNS3 à un sous-réseau physique Wi-Fi/LAN, afin de permettre à des terminaux mobiles réels : des smartphones Android exécutant Linphone : de s'enregistrer auprès du Registrar SIP du routeur d'infrastructure.</p>
 <h3 id="fiche-technique">Fiche technique</h3>
 <table>
 <thead>
@@ -63,7 +63,7 @@
 </p>
 </blockquote>
 <figure class="embed"><iframe src="9024e5f8-voip_cme_sccp_sip.html" loading="lazy" title="voip_cme_sccp_sip.html"></iframe><figcaption><a href="9024e5f8-voip_cme_sccp_sip.html" target="_blank" rel="noopener">Ouvrir le schéma interactif en plein écran ↗</a></figcaption></figure>
-<h2 id="01-deploiement-de-linfrastructure-cur">01 — Déploiement de l'infrastructure cœur</h2>
+<h2 id="01-deploiement-de-linfrastructure-cur">01 : Déploiement de l'infrastructure cœur</h2>
 <p>La première étape consiste à préparer le routeur Cisco 3725 en configurant son horloge système (essentiel pour la synchronisation des journaux et des paquets de téléphonie), l'interface réseau Layer 3 et le pool DHCP supportant l'option vendor spécifique VoIP.</p>
 <p><img loading="lazy" alt="image.png" src="855b6931-image.png" /></p>
 <p>Routeur Cisco 3725 dans GNS3 : Sur l’image on peut apercevoir le routeur Cisco 3725 connecté via le cloud à la carte physique ETHERNET de l’ordinateur.</p>
@@ -82,7 +82,7 @@ Router(dhcp-config)# default-router 192.168.10.254
 Router(dhcp-config)# option 150 ip 192.168.10.254
 Router(dhcp-config)# exit
 </code></pre>
-<h2 id="02-mise-en-uvre-du-protocole-sccp-skinny">02 — Mise en œuvre du protocole SCCP (Skinny)</h2>
+<h2 id="02-mise-en-uvre-du-protocole-sccp-skinny">02 : Mise en œuvre du protocole SCCP (Skinny)</h2>
 <h3 id="concept-mecanique-sccp">Concept &amp; Mécanique SCCP</h3>
 <p>SCCP (<em>Skinny Client Control Protocol</em>) est un protocole propriétaire Cisco, orienté stimulus. Le téléphone IP SCCP est un terminal "simplifié" (dumb terminal) : toute la logique de traitement d'appel, l'état des lignes, le rafraîchissement des écrans et les tonalités sont générés par le routeur CME.</p>
 <ol>
@@ -157,7 +157,7 @@ Router(config)# ephone 6
 Router(config-ephone)# button 1:6
 Router(config-ephone)# exit
 </code></pre>
-<h2 id="03-mise-en-uvre-du-protocole-sip">03 — Mise en œuvre du protocole SIP</h2>
+<h2 id="03-mise-en-uvre-du-protocole-sip">03 : Mise en œuvre du protocole SIP</h2>
 <h3 id="concept-mecanique-sip">Concept &amp; Mécanique SIP</h3>
 <p>A l'inverse de SCCP, <strong>SIP</strong> (<em>Session Initiation Protocol</em>) est un protocole standard (RFC 3261), basé sur le modèle peer-to-peer / client-serveur et inspiré du protocole HTTP (messages texte ascii : <code>REGISTER</code>, <code>INVITE</code>, <code>200 OK</code>, <code>ACK</code>). Le terminal SIP est "intelligent" : il embarque sa propre logique de fonctionnement et utilise le routeur Cisco CME comme <strong>Registrar / Proxy</strong>.</p>
 <p>La configuration SIP sous Cisco CME requiert la distinction entre la voix générale (<code>voice service voip</code>), les paramètres d'enregistrement globaux (<code>voice register global</code>), les lignes virtuelles (<code>voice register dn</code>) et les terminaux (<code>voice register pool</code>).</p>
@@ -237,7 +237,7 @@ Router(config-register-pool)# description TELEPHONE-1002
 Router(config-register-pool)# voice-class codec 1
 Router(config-register-pool)# exit
 </code></pre>
-<h2 id="04-comparatif-sccp-vs-sip">04 — Comparatif : SCCP vs SIP</h2>
+<h2 id="04-comparatif-sccp-vs-sip">04 : Comparatif : SCCP vs SIP</h2>
 <p>Cette matrice synthétise les différences architecturales observées et mises en œuvre durant ce projet :</p>
 <blockquote>
 <p><strong>Lecture rapide :</strong> SCCP privilégie l’intégration Cisco, tandis que SIP mise sur l’ouverture et la flexibilité.
@@ -247,15 +247,15 @@ Router(config-register-pool)# exit
 <thead>
 <tr>
 <th>Critère d’analyse</th>
-<th>SCCP — Skinny</th>
-<th>SIP — Session Initiation</th>
+<th>SCCP : Skinny</th>
+<th>SIP : Session Initiation</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Philosophie &amp; standard</strong></td>
 <td>Protocole propriétaire Cisco, orienté maître-esclave</td>
-<td>Protocole standardisé — RFC 3261 — orienté pair-à-pair</td>
+<td>Protocole standardisé : RFC 3261 : orienté pair-à-pair</td>
 </tr>
 <tr>
 <td><strong>Port de signalisation</strong></td>
@@ -294,7 +294,7 @@ Router(config-register-pool)# exit
 </tr>
 </tbody>
 </table>
-<h2 id="05-qualite-de-service-qos-pour-la-voix">05 — Qualité de service (QoS) pour la voix</h2>
+<h2 id="05-qualite-de-service-qos-pour-la-voix">05 : Qualité de service (QoS) pour la voix</h2>
 <h3 id="justification-technique">Justification Technique</h3>
 <p>Le trafic vocal est extrêmement sensible aux variations du réseau :</p>
 <ul>
@@ -325,9 +325,9 @@ Router(config)# do write memory
 <p><img loading="lazy" alt="image.png" src="2460fc9f-image.png" /></p>
 <p><img loading="lazy" alt="image.png" src="71529fa0-image.png" /></p>
 <h2 id="tests-de-validation">Tests de validation</h2>
-<p>Cisco IP Communicator — utilisateur Joris</p>
+<p>Cisco IP Communicator : utilisateur Joris</p>
 <p><img loading="lazy" alt="image.png" src="4898dbb7-image.png" /></p>
-<p>Cisco IP Communicator — utilisateur Koffi</p>
+<p>Cisco IP Communicator : utilisateur Koffi</p>
 <p><img loading="lazy" alt="image.png" src="065baff5-image.png" /></p>
 <p>Réalisation d’un appel de Koffi vers Joris (SCCP to SCCP)</p>
 <p><a href="https://drive.google.com/file/d/1GxTHlWaYYwYGR8Yvp3tfPzNSpY95IgGA/view?usp=sharing">https://drive.google.com/file/d/1GxTHlWaYYwYGR8Yvp3tfPzNSpY95IgGA/view?usp=sharing</a></p>
@@ -345,7 +345,7 @@ Router(config)# do write memory
 <li>Validation par des appels SCCP vers SCCP et SIP vers SCCP.</li>
 </ul>
 <hr />
-<h1>Pilotage du projet — bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées correspondent aux travaux réalisés et décrits dans cette fiche. Le score porte uniquement sur ce périmètre réalisé ; les tests complémentaires restent séparés. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> Cisco 3725, DHCP/option 150, CME SCCP, registrar SIP, softphones Linphone et appels documentés</p></blockquote><h2>1. Cadrage et conception</h2><ul><li>☑ Le besoin d’un cœur de téléphonie hybride SCCP/SIP est formulé.</li><li>☑ L’architecture Cisco 3725, GNS3, pont vers le LAN/Wi-Fi et terminaux est documentée.</li><li>☑ Le plan d’adressage voix et les plages de numérotation SCCP/SIP sont définis.</li><li>☑ Les rôles DHCP, TFTP/CME, SCCP et registrar SIP sont décrits.</li></ul><h2>2. Mise en œuvre</h2><ul><li>☑ L’interface LAN du Cisco 3725 est configurée avec 192.168.10.254/24.</li><li>☑ Le pool DHCP VOICE et l’option 150 sont configurés.</li><li>☑ Le service telephony-service et les lignes ephone-dn SCCP sont configurés.</li><li>☑ Les terminaux SCCP et associations ephone/button sont configurés.</li><li>☑ Le service SIP, registrar CME et voice register global sont configurés.</li><li>☑ Les voice register dn et pools SIP sont définis avec authentification et codecs G.711.</li><li>☑ Le pont entre GNS3 et le segment physique est documenté.</li><li>☑ La priority-list de signalisation voix est configurée et appliquée à l’interface.</li></ul><h2>3. Tests documentés</h2><ul><li>☑ Les terminaux Cisco IP Communicator de Joris et Koffi sont présentés.</li><li>☑ Un appel Koffi vers Joris (SCCP vers SCCP) est documenté par une vidéo.</li><li>☑ Un appel Koffi vers Joris (SIP vers SCCP) est documenté par une vidéo.</li><li>☑ Les compétences validées sont limitées aux scénarios explicitement présentés.</li></ul><h2>4. Documentation</h2><ul><li>☑ Les extraits de configuration et commandes principales sont consignés.</li><li>☑ Les différences entre SCCP et SIP sont expliquées.</li><li>☑ Les preuves d’appels et captures de configuration sont référencées.</li><li>☑ La distinction entre signalisation et média RTP est documentée.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Prouver l’enregistrement effectif des terminaux SIP Linphone et les appels dans les deux sens si ce scénario est revendiqué.</li><li>Vérifier l’audio bidirectionnel et les flux RTP pour chaque combinaison de terminaux.</li><li>Tester SIP vers SIP et SCCP vers SIP si ces scénarios sont dans le périmètre.</li><li>Tester les cas d’échec : mauvaise extension, authentification incorrecte et perte de connectivité.</li><li>Mesurer latence, gigue et pertes sous charge avant de revendiquer une QoS complète ; la priority-list seule ne valide pas la qualité.</li><li>Documenter les sauvegardes de configuration et la procédure de retour arrière.</li><li>Ajouter les captures datées et vérifier l’accessibilité des vidéos.</li></ul><p><strong>Bilan :</strong> les réalisations cochées constituent le périmètre documenté. Les actions futures ne sont pas comptabilisées comme réalisées.</p>
+<h1>Pilotage du projet : bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées correspondent aux travaux réalisés et décrits dans cette fiche. Le score porte uniquement sur ce périmètre réalisé ; les tests complémentaires restent séparés. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> Cisco 3725, DHCP/option 150, CME SCCP, registrar SIP, softphones Linphone et appels documentés</p></blockquote><h2>1. Cadrage et conception</h2><ul><li>☑ Le besoin d’un cœur de téléphonie hybride SCCP/SIP est formulé.</li><li>☑ L’architecture Cisco 3725, GNS3, pont vers le LAN/Wi-Fi et terminaux est documentée.</li><li>☑ Le plan d’adressage voix et les plages de numérotation SCCP/SIP sont définis.</li><li>☑ Les rôles DHCP, TFTP/CME, SCCP et registrar SIP sont décrits.</li></ul><h2>2. Mise en œuvre</h2><ul><li>☑ L’interface LAN du Cisco 3725 est configurée avec 192.168.10.254/24.</li><li>☑ Le pool DHCP VOICE et l’option 150 sont configurés.</li><li>☑ Le service telephony-service et les lignes ephone-dn SCCP sont configurés.</li><li>☑ Les terminaux SCCP et associations ephone/button sont configurés.</li><li>☑ Le service SIP, registrar CME et voice register global sont configurés.</li><li>☑ Les voice register dn et pools SIP sont définis avec authentification et codecs G.711.</li><li>☑ Le pont entre GNS3 et le segment physique est documenté.</li><li>☑ La priority-list de signalisation voix est configurée et appliquée à l’interface.</li></ul><h2>3. Tests documentés</h2><ul><li>☑ Les terminaux Cisco IP Communicator de Joris et Koffi sont présentés.</li><li>☑ Un appel Koffi vers Joris (SCCP vers SCCP) est documenté par une vidéo.</li><li>☑ Un appel Koffi vers Joris (SIP vers SCCP) est documenté par une vidéo.</li><li>☑ Les compétences validées sont limitées aux scénarios explicitement présentés.</li></ul><h2>4. Documentation</h2><ul><li>☑ Les extraits de configuration et commandes principales sont consignés.</li><li>☑ Les différences entre SCCP et SIP sont expliquées.</li><li>☑ Les preuves d’appels et captures de configuration sont référencées.</li><li>☑ La distinction entre signalisation et média RTP est documentée.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Prouver l’enregistrement effectif des terminaux SIP Linphone et les appels dans les deux sens si ce scénario est revendiqué.</li><li>Vérifier l’audio bidirectionnel et les flux RTP pour chaque combinaison de terminaux.</li><li>Tester SIP vers SIP et SCCP vers SIP si ces scénarios sont dans le périmètre.</li><li>Tester les cas d’échec : mauvaise extension, authentification incorrecte et perte de connectivité.</li><li>Mesurer latence, gigue et pertes sous charge avant de revendiquer une QoS complète ; la priority-list seule ne valide pas la qualité.</li><li>Documenter les sauvegardes de configuration et la procédure de retour arrière.</li><li>Ajouter les captures datées et vérifier l’accessibilité des vidéos.</li></ul><p><strong>Bilan :</strong> les réalisations cochées constituent le périmètre documenté. Les actions futures ne sont pas comptabilisées comme réalisées.</p>
 </main>
 <footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
 <script src="assets/portfolio.js" defer></script>
