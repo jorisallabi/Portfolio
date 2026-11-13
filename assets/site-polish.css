@@ -141,3 +141,14 @@ footer{border-color:var(--line);background:transparent}
 .project-card:hover{transform:translateY(-3px) scale(1.012)}
 .project-row:hover,.atlas-featured:hover{transform:translateY(-2px) scale(1.008);border-color:rgba(255,255,255,.28)}
 @media(prefers-reduced-motion:reduce){.article figure img,.article>img,.article .evidence-grid img,.project-card,.project-row,.atlas-featured{transform:none!important}}
+
+
+/* Images cliquables : zoom léger au survol et curseur loupe. */
+.article img{cursor:zoom-in;transition:transform .22s ease,border-color .22s ease,filter .22s ease}
+.article img:hover{transform:scale(1.025);border-color:rgba(255,255,255,.38);filter:brightness(1.05)}
+.article img:focus-visible{outline:2px solid #eee;outline-offset:4px}
+@media(hover:hover){
+ .project-card:hover{transform:translateY(-3px) scale(1.012)}
+ .project-row:hover,.atlas-featured:hover{transform:translateY(-2px) scale(1.008)}
+}
+@media(hover:none){.article img:hover{transform:none;filter:none}}
