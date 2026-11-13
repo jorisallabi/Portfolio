@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Supervision Zabbix en très haute disponibilité : réseau campus redondant (HSRP, OSPF, LACP), SD-WAN double ISP et cluster Hyper-V sur stockage iSCSI — Joris Allabi</title><meta name="description" content="Laboratoire livré : campus 3 tiers redondant (HSRP, OSPF, LACP), SD-WAN FortiGate double ISP, cluster Hyper-V 2 nœuds sur iSCSI avec témoin de quorum, supervision SNMP Zabbix. Conception justifiée, configurations, cas d'usage et tests de panne.">
+<title>Supervision Zabbix en très haute disponibilité : réseau campus redondant (HSRP, OSPF, LACP), SD-WAN double ISP et cluster Hyper-V sur stockage iSCSI : Joris Allabi</title><meta name="description" content="Laboratoire livré : campus 3 tiers redondant (HSRP, OSPF, LACP), SD-WAN FortiGate double ISP, cluster Hyper-V 2 nœuds sur iSCSI avec témoin de quorum, supervision SNMP Zabbix. Conception justifiée, configurations, cas d'usage et tests de panne.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
@@ -132,7 +132,7 @@
 <tr><td>SW_EDGE annonce la route par défaut (<code>default-information originate</code>)</td><td>C'est lui qui touche le FortiGate ; les L3 de distribution héritent de la sortie Internet</td><td>Route par défaut configurée sur chaque switch</td></tr>
 <tr><td>Liens /30 entre cœur et distribution</td><td>Deux adresses utilisables seulement : pas de gaspillage d'adresses</td><td>/24 ou /29</td></tr>
 <tr><td>EtherChannel LACP (2 ports) sur chaque lien cœur ↔ distribution</td><td>Redondance du lien et bande passante agrégée de 2 Gb/s (1 Gb/s par port)</td><td>Lien unique</td></tr>
-<tr><td>Trunk entre les deux L3 de distribution</td><td>Les deux switches doivent se parler pour que HSRP fonctionne</td><td>—</td></tr>
+<tr><td>Trunk entre les deux L3 de distribution</td><td>Les deux switches doivent se parler pour que HSRP fonctionne</td><td>:</td></tr>
 <tr><td>Un service par VM, DHCP et DNS sur une instance à part (contrôleur de domaine)</td><td>La panne d'un service ne paralyse pas le réseau</td><td>Tout sur une seule machine</td></tr>
 <tr><td>Cluster de 2 hôtes sur LUN iSCSI en mode bloc</td><td>Les fichiers des VM sont partagés : lors d'un déplacement, seule la ressource de calcul change</td><td>Stockage local par hôte (pas de reprise automatique)</td></tr>
 <tr><td>3 cartes réseau par hôte (serveurs, iSCSI, heartbeat)</td><td>Isole le trafic de stockage et la surveillance mutuelle du trafic des VM</td><td>Une seule carte pour tout</td></tr>
@@ -417,7 +417,7 @@ end</code></pre>
 <h2 id="tests">5. Tests et validation</h2>
 <p>Chaque test est mené depuis un système consommateur avec un ping continu, pour simuler un environnement de production. Verdicts possibles : Réussi, Échoué, Preuve à ajouter.</p>
 
-<h3>Test 1 — Validation des configurations des switches</h3>
+<h3>Test 1 : Validation des configurations des switches</h3>
 <ul>
 <li><b>Procédure :</b> <code>show run</code> sur chaque switch ; contrôle que tous les SVI sont up et que la configuration est complète.</li>
 <li><b>Attendu :</b> SVI up/up, VLAN, HSRP et OSPF présents.</li>
@@ -425,7 +425,7 @@ end</code></pre>
 </ul>
 
 
-<h3>Test 2 — Bascule HSRP</h3>
+<h3>Test 2 : Bascule HSRP</h3>
 <ul>
 <li><b>Procédure :</b> depuis des hôtes de chaque VLAN, ping continu vers un réseau externe (le WAN) ; arrêt de l'un des L3 de distribution ; puis remise en service.</li>
 <li><b>Attendu :</b> coupure très brève, puis reprise ; le switch rétabli redevient master (<code>preempt</code>).</li>
@@ -433,7 +433,7 @@ end</code></pre>
 </ul>
 
 
-<h3>Test 3 — Routage de l'infrastructure</h3>
+<h3>Test 3 : Routage de l'infrastructure</h3>
 <ul>
 <li><b>Procédure :</b> pings entre hôtes de VLAN différents et vers l'extérieur.</li>
 <li><b>Attendu :</b> joignabilité complète, sauf les restrictions prévues (invités).</li>
@@ -441,7 +441,7 @@ end</code></pre>
 </ul>
 
 
-<h3>Test 4 — Migration manuelle à chaud d'une VM</h3>
+<h3>Test 4 : Migration manuelle à chaud d'une VM</h3>
 <ul>
 <li><b>Procédure :</b> VM Ubuntu 172.16.50.60 déployée dans le cluster ; ping continu depuis l'un des hôtes ; déplacement de la VM en fonctionnement de l'hôte 2 vers l'hôte 1.</li>
 <li><b>Attendu :</b> déplacement sans à-coup, interruption minimale.</li>
@@ -450,7 +450,7 @@ end</code></pre>
 </ul>
 <div class="video-evidence"><div class="video-frame"><iframe src="https://drive.google.com/file/d/1S5GWDPHMSdlnErExFSZcjAIIWrLqPUI2/preview" title="Migration manuelle à chaud de la VM ZABBIX" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div><p><b>Migration manuelle à chaud de la VM ZABBIX.</b> Déplacement manuel du rôle de machine virtuelle ZABBIX d'un nœud Hyper-V vers l'autre pendant son exécution.</p><p><a href="https://drive.google.com/file/d/1S5GWDPHMSdlnErExFSZcjAIIWrLqPUI2/view" target="_blank" rel="noopener">Ouvrir sur Google Drive</a></p></div>
 
-<h3>Test 5 — Panne critique : extinction d'un hôte</h3>
+<h3>Test 5 : Panne critique : extinction d'un hôte</h3>
 <ul>
 <li><b>Procédure :</b> vérification préalable que la VM tourne sur l'hôte ciblé ; ping continu vers la VM ; extinction brutale de cet hôte.</li>
 <li><b>Attendu :</b> coupure temporaire, renégociation des votes, redémarrage de la VM sur l'hôte restant.</li>
@@ -459,7 +459,7 @@ end</code></pre>
 </ul>
 <div class="video-evidence"><div class="video-frame"><iframe src="https://drive.google.com/file/d/1oyKSnEUnoGvhqDvT5cGB_Mr0ysKGzCN2/preview" title="Redémarrage automatique après extinction de HYPER-V-2" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div><p><b>Redémarrage automatique après extinction de HYPER-V-2.</b> Extinction de HYPER-V-2 : le cluster détecte la panne et redémarre automatiquement le rôle ZABBIX sur le nœud restant.</p><p><a href="https://drive.google.com/file/d/1oyKSnEUnoGvhqDvT5cGB_Mr0ysKGzCN2/view" target="_blank" rel="noopener">Ouvrir sur Google Drive</a></p></div>
 
-<h3>Test 6 — Bascule SD-WAN</h3>
+<h3>Test 6 : Bascule SD-WAN</h3>
 <ul>
 <li><b>Procédure :</b> depuis un poste, ping vers l'extérieur (par exemple google.com) ; coupure de l'un des ISP ; puis rétablissement.</li>
 <li><b>Attendu :</b> perte brève, reprise quasi immédiate ; retour automatique au lien préféré.</li>
@@ -467,7 +467,7 @@ end</code></pre>
 </ul>
 
 
-<h3>Test 7 — Défaillances cumulées</h3>
+<h3>Test 7 : Défaillances cumulées</h3>
 <ul>
 <li><b>Procédure :</b> simuler le cas de défaillance maximale : couper l'un des ISP, puis simultanément l'un des switches de distribution ; garder des pings continus vers l'extérieur et vers les ressources internes.</li>
 <li><b>Attendu :</b> services toujours disponibles, les redondances fonctionnent de concert.</li>
@@ -557,7 +557,7 @@ end</code></pre>
 <p><b>Règle de statut :</b> « Livré » décrit un périmètre réellement implémenté et testé. Les cadres de preuve restants et les écarts du chapitre 6 sont des actions ouvertes ; ils ne doivent pas être présentés comme des réalisations.</p>
 <hr />
 <h2 id="projet-suivant">Projet suivant</h2>
-<p>La couche de ticketing et l'automatisation alerte vers ticket font l'objet de la fiche <a href="supervision-et-gestion-des-incidents-avec-zabbix-glpi-et-sau.html">Infrastructure hybride résiliente Windows Server 2022, Hyper-V, Failover Clustering et supervision Zabbix/GLPI</a>.</p><h1>Pilotage du projet — bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées correspondent aux travaux réalisés et décrits dans cette fiche. Le score porte uniquement sur ce périmètre réalisé ; les tests complémentaires restent séparés. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> topologie campus, configurations décrites, six scénarios validés sur sept selon le contrôle de clôture, avec limites résiduelles explicites</p></blockquote><h2>1. Cadrage et conception</h2><ul><li>☑ Le besoin de disponibilité du campus et de sa supervision est défini.</li><li>☑ L’architecture campus à sept VLAN, HSRP, OSPF, LACP et double WAN est décrite.</li><li>☑ L’architecture Hyper-V à deux nœuds, les trois réseaux et le témoin de quorum sont documentés.</li><li>☑ Les risques résiduels et points uniques de défaillance sont recensés.</li><li>☑ La politique de sécurité distingue les règles appliquées des règles non visibles dans les configurations.</li></ul><h2>2. Mise en œuvre documentée</h2><ul><li>☑ Les configurations VLAN, SVI, HSRP et OSPF sont documentées.</li><li>☑ Les EtherChannels LACP et liens de distribution sont décrits.</li><li>☑ Le FortiGate SD-WAN et les seuils SLA sont documentés.</li><li>☑ Le cluster Hyper-V, les réseaux dédiés et le stockage iSCSI partagé sont décrits.</li><li>☑ Les contrôles SNMP et la supervision Zabbix sont intégrés au périmètre du laboratoire.</li></ul><h2>3. Tests et exploitation</h2><ul><li>☑ Le contrôle des configurations des switches et SVI est déclaré réussi.</li><li>☑ La bascule HSRP d’un switch de distribution est rapportée comme testée.</li><li>☑ La bascule SD-WAN après perte d’un ISP et le retour au lien préféré sont rapportés comme testés.</li><li>☑ La migration à chaud de la VM est mesurée à moins de 15 secondes.</li><li>☑ La reprise automatique après extinction d’un hôte est rapportée, avec environ cinq minutes en virtualisation imbriquée.</li><li>☑ Le contrôle de clôture consigne six tests réussis sur sept et identifie le test restant.</li><li>☑ Les limites liées au FortiGate unique, SW_EDGE, AD, NAS iSCSI et virtualisation imbriquée sont documentées.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Exécuter et documenter le scénario de défaillances cumulées restant (test 7).</li><li>Ajouter les captures et vidéos aux emplacements signalés.</li><li>Ajouter l’export FortiGate actuel au dossier de preuves.</li><li>Tester la panne d’un membre EtherChannel, de SW_EDGE et du NAS iSCSI.</li><li>Mettre en œuvre et valider les règles SSH, DHCP snooping et port-security non visibles.</li><li>Compléter la journalisation et la supervision des événements.</li></ul><p><strong>Bilan :</strong> les réalisations cochées constituent le périmètre documenté. Les actions futures ne sont pas comptabilisées comme réalisées.</p>
+<p>La couche de ticketing et l'automatisation alerte vers ticket font l'objet de la fiche <a href="supervision-et-gestion-des-incidents-avec-zabbix-glpi-et-sau.html">Infrastructure hybride résiliente Windows Server 2022, Hyper-V, Failover Clustering et supervision Zabbix/GLPI</a>.</p><h1>Pilotage du projet : bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées correspondent aux travaux réalisés et décrits dans cette fiche. Le score porte uniquement sur ce périmètre réalisé ; les tests complémentaires restent séparés. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> topologie campus, configurations décrites, six scénarios validés sur sept selon le contrôle de clôture, avec limites résiduelles explicites</p></blockquote><h2>1. Cadrage et conception</h2><ul><li>☑ Le besoin de disponibilité du campus et de sa supervision est défini.</li><li>☑ L’architecture campus à sept VLAN, HSRP, OSPF, LACP et double WAN est décrite.</li><li>☑ L’architecture Hyper-V à deux nœuds, les trois réseaux et le témoin de quorum sont documentés.</li><li>☑ Les risques résiduels et points uniques de défaillance sont recensés.</li><li>☑ La politique de sécurité distingue les règles appliquées des règles non visibles dans les configurations.</li></ul><h2>2. Mise en œuvre documentée</h2><ul><li>☑ Les configurations VLAN, SVI, HSRP et OSPF sont documentées.</li><li>☑ Les EtherChannels LACP et liens de distribution sont décrits.</li><li>☑ Le FortiGate SD-WAN et les seuils SLA sont documentés.</li><li>☑ Le cluster Hyper-V, les réseaux dédiés et le stockage iSCSI partagé sont décrits.</li><li>☑ Les contrôles SNMP et la supervision Zabbix sont intégrés au périmètre du laboratoire.</li></ul><h2>3. Tests et exploitation</h2><ul><li>☑ Le contrôle des configurations des switches et SVI est déclaré réussi.</li><li>☑ La bascule HSRP d’un switch de distribution est rapportée comme testée.</li><li>☑ La bascule SD-WAN après perte d’un ISP et le retour au lien préféré sont rapportés comme testés.</li><li>☑ La migration à chaud de la VM est mesurée à moins de 15 secondes.</li><li>☑ La reprise automatique après extinction d’un hôte est rapportée, avec environ cinq minutes en virtualisation imbriquée.</li><li>☑ Le contrôle de clôture consigne six tests réussis sur sept et identifie le test restant.</li><li>☑ Les limites liées au FortiGate unique, SW_EDGE, AD, NAS iSCSI et virtualisation imbriquée sont documentées.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Exécuter et documenter le scénario de défaillances cumulées restant (test 7).</li><li>Ajouter les captures et vidéos aux emplacements signalés.</li><li>Ajouter l’export FortiGate actuel au dossier de preuves.</li><li>Tester la panne d’un membre EtherChannel, de SW_EDGE et du NAS iSCSI.</li><li>Mettre en œuvre et valider les règles SSH, DHCP snooping et port-security non visibles.</li><li>Compléter la journalisation et la supervision des événements.</li></ul><p><strong>Bilan :</strong> les réalisations cochées constituent le périmètre documenté. Les actions futures ne sont pas comptabilisées comme réalisées.</p>
 </main>
 <footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
 <script src="assets/portfolio.js" defer></script>
