@@ -31,4 +31,44 @@
   } else {
     targets.forEach((el) => el.classList.add('is-visible'));
   }
+
+  // Agrandissement accessible des captures et photos des fiches projets.
+  const lightbox = document.createElement('dialog');
+  lightbox.className = 'image-lightbox';
+  lightbox.setAttribute('aria-label', 'Aperçu agrandi de l’image');
+  const lightboxImage = document.createElement('img');
+  const lightboxCaption = document.createElement('figcaption');
+  const lightboxFigure = document.createElement('figure');
+  const closeButton = document.createElement('button');
+  closeButton.className = 'image-lightbox-close';
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Fermer l’image agrandie');
+  closeButton.textContent = '×';
+  lightboxFigure.append(lightboxImage, lightboxCaption);
+  lightbox.append(closeButton, lightboxFigure);
+  document.body.appendChild(lightbox);
+
+  const closeLightbox = () => {
+    if (lightbox.open) lightbox.close();
+    lightboxImage.removeAttribute('src');
+  };
+  closeButton.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (event) => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  lightbox.addEventListener('close', () => {
+    lightboxImage.removeAttribute('src');
+  });
+
+  document.addEventListener('click', (event) => {
+    const image = event.target.closest('.article img');
+    if (!image || !image.src) return;
+    event.preventDefault();
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt || 'Image agrandie';
+    const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
+    lightboxCaption.textContent = caption || image.alt || '';
+    lightboxCaption.hidden = !lightboxCaption.textContent;
+    if (typeof lightbox.showModal === 'function') lightbox.showModal();
+  });
 })();
