@@ -329,7 +329,7 @@ simulés en laboratoire.</p>
 <p>La démonstration commence avec trois VM (TTY Linux, Slitaz et Windows Server), toutes arrêtées sur l’hôte ESXi 1, tandis que l’hôte ESXi 2 est inoccupé. Je démarre les trois VM simultanément. Le DRS répartit alors automatiquement la charge : comme Windows Server consomme 2 Go, contre 700 Mo au total pour les deux VM Linux, il migre ces dernières vers l’hôte ESXi 2 via vMotion et laisse Windows Server sur l’hôte ESXi 1. En 60 secondes, la charge est ainsi équilibrée (environ 2 Go par hôte), sans intervention.</p>
 <p>Pour simuler une panne matérielle, j’arrête ensuite complètement l’hôte ESXi 2. En moins de 10 secondes, le cluster HA détecte la perte du heartbeat et redémarre automatiquement les deux VM Linux sur l’hôte ESXi 1 à partir du datastore iSCSI partagé. Après environ 60 à 90 secondes, tous les services sont de nouveau opérationnels. Windows Server, resté sur l’hôte ESXi 1, n’a jamais été interrompu. Aucune intervention manuelle n’a été nécessaire.</p>
 <hr />
-<h1 id="pilotage-du-projet-methodologie-inspiree-itil-4">Pilotage du projet : pratiques inspirées d’ITIL 4</h1>
+<h2 id="pilotage-du-projet-methodologie-inspiree-itil-4">Pilotage du projet : pratiques inspirées d’ITIL 4</h2>
 <p>Le bilan ci-dessous reprend les activités effectivement réalisées et visibles dans ce laboratoire VMware. Les cases cochées correspondent à des éléments décrits, configurés ou démontrés dans le projet ; elles ne signifient pas qu’un processus ITIL formel a été déployé en entreprise.</p>
 
 <h2 id="cadrage-et-perimetre">1. Cadrage et périmètre</h2>
