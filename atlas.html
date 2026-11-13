@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ATLAS | Projet d'automatisation IA | Joris Allabi</title>
-<meta name="description" content="Étude technique du projet ATLAS : assistant Telegram local, workflows n8n, agents spécialisés et automatisation contrôlée.">
+<meta name="description" content="ATLAS est un assistant local relié à Telegram. Il utilise n8n, Ollama et PostgreSQL pour gérer des tâches, des projets et des offres d’emploi.">
 <meta name="theme-color" content="#0b0b0b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"><link rel="stylesheet" href="assets/atlas.css"><link rel="stylesheet" href="assets/monochrome.css"><link rel="stylesheet" href="assets/atlas-page.css"></head>
 <body class="atlas-page"><header class="top"><div class="wrap bar"><a class="brand" href="index.html">JORIS ALLABI <span class="micro">/ PORTFOLIO</span></a><nav aria-label="Navigation principale"><a href="index.html#projets-automation">Projets IA</a><a href="index.html#profil">Profil</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap atlas-standalone"><p class="crumb"><a href="index.html#projets-automation">← Retour aux projets</a></p><div class="atlas-modal-body">
 <p class="atlas-modal-kicker">09 / Projet phare · Système local multi-agents</p>
-<h2 class="atlas-modal-title" id="atlas-modal-title">ATLAS — Assistant Personnel &amp; Orchestrateur d'Agents IA</h2>
-<p class="atlas-modal-lead">Un système personnel piloté par Telegram, construit sur n8n et exécuté localement. ATLAS distribue les demandes vers des modules spécialisés pour les tâches, l'agenda, les projets et la recherche d'emploi au Bénin. La base de données reste la source de vérité ; l'IA aide à interpréter et planifier, mais le code valide et exécute.</p>
+<h2 class="atlas-modal-title" id="atlas-modal-title">ATLAS : assistant personnel avec n8n et IA</h2>
+<p class="atlas-modal-lead">ATLAS est un assistant personnel que j’utilise depuis Telegram. Il tourne en local avec n8n et répartit les demandes entre plusieurs modules. Il gère les tâches, l’agenda, les projets et la recherche d’emploi au Bénin. La base conserve les données. Le code vérifie les demandes avant toute action.</p>
 <div class="atlas-meta-strip"><span>n8n auto-hébergé</span><span>Ollama · qwen3.5:9b</span><span>Supabase / PostgREST</span><span>Telegram · Trello · Google Agenda</span><span>Audit technique · 13.11.2026</span></div>
 <nav class="atlas-modal-nav" aria-label="Navigation de l'étude de cas"><a href="#atlas-architecture">Architecture</a><a href="#atlas-jarvis">JARVIS</a><a href="#atlas-jericho">JERICHO</a><a href="#atlas-engineering">Ingénierie</a><a href="#atlas-data">Données &amp; limites</a></nav>
 
 <section class="atlas-section" id="atlas-architecture">
-<p class="atlas-modal-kicker">01 / Architecture &amp; flux</p><h3>Un point d'entrée, des agents spécialisés, une base centrale.</h3>
+<p class="atlas-modal-kicker">01 / Architecture &amp; flux</p><h3>Telegram, quatre workflows et une base de données.</h3>
 <p>Telegram déclenche le routeur ATLAS via un webhook exposé par ngrok. Le webhook répond immédiatement à Telegram, puis le planificateur intercepte les demandes de projets et les listes de tâches. Les autres messages sont routés vers JARVIS ou JERICHO selon leur nature.</p>
 <div class="atlas-flow"><div class="atlas-flow-item"><b>01 · Telegram</b><small>Interface conversationnelle et boutons de validation</small></div><div class="atlas-flow-item"><b>02 · ATLAS</b><small>Contrôles d'accès, anti-doublon et routage</small></div><div class="atlas-flow-item"><b>03 · Ollama</b><small>Interprétation du texte libre et appels d'outils</small></div><div class="atlas-flow-item"><b>04 · Modules</b><small>JARVIS · JERICHO · synchronisation Trello</small></div><div class="atlas-flow-item"><b>05 · Base</b><small>État de référence, journaux et files d'actions</small></div></div>
 <div class="atlas-note"><strong>Repli tolérant aux pannes :</strong> si Ollama ne répond pas, le routeur envoie le message vers JERICHO au lieu de le perdre. Les commandes JARVIS explicites et les callbacks de boutons suivent des chemins déterministes, sans dépendre du LLM.</div>
@@ -28,7 +28,7 @@
 </div></section>
 
 <section class="atlas-section" id="atlas-jarvis">
-<p class="atlas-modal-kicker">02 / Module JARVIS</p><h3>Transformer les demandes en actions traçables.</h3>
+<p class="atlas-modal-kicker">02 / Module JARVIS</p><h3>Gérer les tâches et les projets.</h3>
 <p>JARVIS gère les tâches, les événements et les projets. L'analyse des commandes courantes repose sur des expressions régulières, des règles métier et des requêtes SQL : aucune génération libre par LLM n'intervient dans l'exécution quotidienne.</p>
 <div class="atlas-metrics"><div class="atlas-metric"><strong>20</strong><span>Tâches max. par lot</span></div><div class="atlas-metric"><strong>1</strong><span>Écriture atomique du lot</span></div><div class="atlas-metric"><strong>3</strong><span>Niveaux d'autonomie</span></div><div class="atlas-metric"><strong>1 RPC</strong><span>Arbre projet transactionnel</span></div></div>
 <div class="atlas-detail-list">
@@ -48,7 +48,7 @@
 </div></section>
 
 <section class="atlas-section" id="atlas-engineering">
-<p class="atlas-modal-kicker">04 / Rigueur d'ingénierie</p><h3>La fiabilité est portée par le code, la base et les garde-fous.</h3>
+<p class="atlas-modal-kicker">04 / Rigueur d'ingénierie</p><h3>Le code vérifie les actions avant leur exécution.</h3>
 <p>ATLAS sépare les décisions probabilistes de l'exécution métier. Les modules écrivent en base ; Trello et Google Agenda reflètent cet état et peuvent renvoyer les modifications utilisateur vers la base selon des règles explicites.</p>
 <h4>Niveaux d'autonomie</h4><div class="atlas-levels">
 <div class="atlas-level"><b>Niveau A</b><span>Exécution directe pour les actions autorisées par la règle configurée.</span></div>
