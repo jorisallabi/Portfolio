@@ -24,7 +24,8 @@
     opener.focus();
   });
   dialog.querySelectorAll('.atlas-modal-nav a').forEach((link) => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
       const target = dialog.querySelector(link.getAttribute('href'));
       if (target) target.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
     });
