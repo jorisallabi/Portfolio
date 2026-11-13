@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VPN WireGuard sur serveur Proxmox physique : accès distant au véritable LAN domestique — Joris Allabi</title><meta name="description" content="Déploiement réel de WireGuard sur un ancien PC reconverti en serveur Proxmox (Intel Core i5 10e génération, 12 Go RAM, SSD 500 Go). Accès distant chiffré au véritable réseau domestique, avec routage, NAT, DuckDNS et tests depuis les données mobiles.">
+<title>VPN WireGuard sur serveur Proxmox physique : accès distant au véritable LAN domestique : Joris Allabi</title><meta name="description" content="Déploiement réel de WireGuard sur un ancien PC reconverti en serveur Proxmox (Intel Core i5 10e génération, 12 Go RAM, SSD 500 Go). Accès distant chiffré au véritable réseau domestique, avec routage, NAT, DuckDNS et tests depuis les données mobiles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
@@ -185,28 +185,28 @@ PersistentKeepalive = 25</code></pre>
 <h2 id="tests">4. Tests et validation</h2>
 <p>Les tests sont menés depuis le téléphone en données mobiles (jamais depuis le Wi-Fi du domicile, qui ne prouve rien sur l'accès extérieur) et depuis le serveur. Verdicts possibles : Réussi, Écart ouvert, Non réalisé.</p>
 
-<h3>Test 1 — Association Wi-Fi de <code>wlo1</code></h3>
+<h3>Test 1 : Association Wi-Fi de <code>wlo1</code></h3>
 <ul>
 <li><b>Procédure :</b> <code>wpa_cli -i wlo1 status</code>, puis <code>ping -I wlo1 192.168.100.1</code>.</li>
 <li><b>Attendu :</b> <code>wpa_state=COMPLETED</code> et réponses du routeur.</li>
 <li><b>Observé :</b> association établie après nettoyage des instances en double (voir INC-001) ; le routeur répond en 5 à 8 ms. <b>Verdict : Réussi.</b></li>
 </ul>
 
-<h3>Test 2 — Sortie vers Internet par le Wi-Fi</h3>
+<h3>Test 2 : Sortie vers Internet par le Wi-Fi</h3>
 <ul>
 <li><b>Procédure :</b> <code>curl -4 --interface wlo1 https://api.ipify.org</code> après la mise en place de la table de routage dédiée.</li>
 <li><b>Attendu :</b> l'adresse publique du routeur.</li>
 <li><b>Observé :</b> une adresse publique est renvoyée ; avant la règle de routage, la même commande échouait (voir INC-002). Le <code>ping</code> vers <code>8.8.8.8</code> reste sans réponse alors que les connexions TCP aboutissent ; je n'ai pas isolé la cause (filtrage ICMP probable, non confirmé). <b>Verdict : Réussi.</b></li>
 </ul>
 
-<h3>Test 3 — Absence de CGNAT</h3>
+<h3>Test 3 : Absence de CGNAT</h3>
 <ul>
 <li><b>Procédure :</b> comparer l'adresse WAN affichée dans l'interface du routeur avec l'adresse vue depuis Internet.</li>
 <li><b>Attendu :</b> adresses identiques, hors plages privées et hors <code>100.64.0.0/10</code>.</li>
 <li><b>Observé :</b> adresses identiques ; la redirection de port peut fonctionner. <b>Verdict : Réussi.</b></li>
 </ul>
 
-<h3>Test 4 — Établissement du tunnel depuis les données mobiles</h3>
+<h3>Test 4 : Établissement du tunnel depuis les données mobiles</h3>
 <ul>
 <li><b>Procédure :</b> <code>tcpdump -ni wlo1 udp port 51820</code> pendant l'activation du tunnel sur le téléphone, puis <code>wg show</code>.</li>
 <li><b>Attendu :</b> un échange de handshake sur <code>wlo1</code>, puis un <code>latest handshake</code> récent côté serveur.</li>
@@ -226,7 +226,7 @@ peer: &lt;clé publique du téléphone&gt;
   transfer: 83.34 KiB received, 441.58 KiB sent</code></pre>
 <figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-telephone-tunnel.jpg" alt="Informations sur le statut du téléphone : adresse IP 10.10.10.2"><figcaption>État du téléphone avec le tunnel actif : l'adresse IP est celle du plan d'adressage du VPN, <code>10.10.10.2</code> (encadrée).</figcaption></figure>
 
-<h3>Test 5 — Accès au LAN du domicile à travers le tunnel</h3>
+<h3>Test 5 : Accès au LAN du domicile à travers le tunnel</h3>
 <ul>
 <li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.168.100.1</code>) et lancer un ping vers cette adresse, après ajout du NAT sur <code>wlo1</code> et de <code>192.168.100.0/24</code> dans <code>AllowedIPs</code>.</li>
 <li><b>Attendu :</b> la page du routeur répond ; sur le serveur, les paquets sortent par <code>wlo1</code> avec la source <code>192.168.100.62</code>.</li>
@@ -240,14 +240,14 @@ peer: &lt;clé publique du téléphone&gt;
 <p><b>Observation complémentaire : seul le trafic déclaré passe par le tunnel.</b> Un site de test d'adresse IP, consulté depuis le téléphone avec le tunnel actif (icône de clé dans la barre d'état), affiche une adresse publique différente de celle du routeur du domicile. La navigation ordinaire du téléphone ne passe donc pas par le tunnel, conformément aux <code>AllowedIPs</code> qui ne déclarent que les trois réseaux du laboratoire.</p>
 <figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-publique-hors-tunnel.jpg" alt="Site de test d'adresse IP consulté depuis le téléphone, adresse publique masquée"><figcaption>Adresse publique vue par un site externe depuis le téléphone, tunnel actif. L'adresse est masquée.</figcaption></figure>
 
-<h3>Test 6 — DNS dynamique</h3>
+<h3>Test 6 : DNS dynamique</h3>
 <ul>
 <li><b>Procédure :</b> <code>nslookup</code> du sous-domaine, lecture de <code>/opt/duckdns/duck.log</code> et de <code>crontab -l</code>.</li>
 <li><b>Attendu :</b> résolution vers l'adresse publique, journal à <code>OK</code>, une seule ligne planifiée.</li>
 <li><b>Observé :</b> la résolution renvoie la bonne adresse et la tâche planifiée est unique. Un premier passage a donné <code>KO</code> à cause d'un point en trop après le nom du sous-domaine dans le script (voir INC-005) ; après correction, le journal affiche <code>OK</code>. Ce résultat est constaté sur le serveur, sans capture jointe. <b>Verdict : Réussi.</b></li>
 </ul>
 
-<h3>Test 7 — Redémarrage du serveur</h3>
+<h3>Test 7 : Redémarrage du serveur</h3>
 <ul>
 <li><b>Procédure :</b> redémarrer, puis contrôler <code>pgrep -a wpa_supplicant</code>, <code>wpa_cli -i wlo1 status</code>, <code>ip rule</code>, <code>wg show</code>, et reconnecter le téléphone sans intervention.</li>
 <li><b>Attendu :</b> une seule instance <code>wpa_supplicant</code>, Wi-Fi associé, une règle de routage, <code>wg0</code> en écoute, tunnel rétabli.</li>
@@ -255,7 +255,7 @@ peer: &lt;clé publique du téléphone&gt;
 </ul>
 
 
-<h3>Test 8 — Accès au poste Windows du LAN depuis un réseau Wi-Fi externe (RDP)</h3>
+<h3>Test 8 : Accès au poste Windows du LAN depuis un réseau Wi-Fi externe (RDP)</h3>
 <ul>
 <li><b>Contexte :</b> le laptop est d'abord connecté à un réseau Wi-Fi extérieur au domicile, avec l'adresse <code>192.168.158.162</code>. Le poste Windows de destination est sur le LAN domestique, à l'adresse <code>192.168.100.109</code>.</li>
 <li><b>Avant activation du VPN :</b> le ping vers <code>192.168.100.109</code> échoue et le poste est inaccessible par le Bureau à distance (RDP). Ce comportement est attendu : le réseau externe ne dispose pas de route vers le LAN privé du domicile.</li>
@@ -278,21 +278,21 @@ peer: &lt;clé publique du téléphone&gt;
 </tbody></table>
 
 <h2 id="incidents">5. Incidents et retour d'expérience</h2>
-<h3 id="inc-001-plusieurs-instances-wpa-supplicant">INC-001 — Interface Wi-Fi inactive et plusieurs instances de <code>wpa_supplicant</code></h3>
+<h3 id="inc-001-plusieurs-instances-wpa-supplicant">INC-001 : Interface Wi-Fi inactive et plusieurs instances de <code>wpa_supplicant</code></h3>
 <ul>
 <li><b>Symptôme :</b> <code>wlo1</code> à l'état <code>DOWN</code> malgré son adresse, et <code>wpa_cli</code> sans interface de contrôle. Après un lancement manuel, <code>wpa_state=DISCONNECTED</code> et des dizaines de messages « Match already configured ».</li>
 <li><b>Cause :</b> trois processus <code>wpa_supplicant</code> (celui du système et deux lancés à la main) se disputaient l'interface, constaté avec <code>pgrep -a wpa_supplicant</code>.</li>
 <li><b>Correction :</b> arrêt de tous les processus avec <code>killall wpa_supplicant</code>, puis un seul lancement. L'association passe à <code>COMPLETED</code>.</li>
 <li><b>Enseignement :</b> lister les processus avant de relancer un démon, plutôt que d'en ajouter un de plus.</li>
 </ul>
-<h3 id="inc-002-sortie-impossible-par-wlo1">INC-002 — Aucune requête ne sort par <code>wlo1</code></h3>
+<h3 id="inc-002-sortie-impossible-par-wlo1">INC-002 : Aucune requête ne sort par <code>wlo1</code></h3>
 <ul>
 <li><b>Symptôme :</b> <code>curl --interface wlo1</code> échoue en 4 à 15 ms, et <code>ping -I wlo1</code> répond « Network is unreachable », alors que le routeur répond en local.</li>
 <li><b>Cause :</b> la seule route par défaut passe par <code>vmbr0</code> ; aucune route n'existe via <code>wlo1</code>. Un échec aussi rapide indique un problème local, pas un blocage distant.</li>
 <li><b>Correction :</b> table de routage <code>100</code> et règle <code>ip rule add from 192.168.100.62 table 100</code>. <code>curl</code> renvoie ensuite l'adresse publique.</li>
 <li><b>Enseignement :</b> avec deux sorties, une réponse doit repartir par l'interface d'où est venue la requête ; c'est exactement le besoin de WireGuard côté Wi-Fi.</li>
 </ul>
-<h3 id="inc-003-ifup-echoue-sur-wpasupplicant">INC-003 — <code>ifup wlo1</code> échoue sur le script <code>wpasupplicant</code></h3>
+<h3 id="inc-003-ifup-echoue-sur-wpasupplicant">INC-003 : <code>ifup wlo1</code> échoue sur le script <code>wpasupplicant</code></h3>
 <ul>
 <li><b>Symptôme :</b> <code>ifup</code> s'arrête avec « pre-up cmd /etc/network/if-pre-up.d/wpasupplicant failed: returned 1 », et <code>wpa_state=INTERFACE_DISABLED</code>.</li>
 <li><b>Cause :</b> une instance lancée à la main occupait déjà l'interface, donc celle que le script d'<code>ifup</code> voulait démarrer ne pouvait pas démarrer.</li>
@@ -300,7 +300,7 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Observation :</b> la règle <code>from 192.168.100.62 lookup 100</code> apparaissait en double (ajout manuel, puis <code>post-up</code>). Sans conséquence, supprimée avec <code>ip rule del</code>.</li>
 <li><b>Enseignement :</b> un seul acteur gère l'interface. Mélanger lancement manuel et configuration persistante crée des conflits qui reviennent au redémarrage.</li>
 </ul>
-<h3 id="inc-004-pas-de-handshake-apres-redemarrage-de-wg0">INC-004 — Aucun handshake après le redémarrage de <code>wg0</code></h3>
+<h3 id="inc-004-pas-de-handshake-apres-redemarrage-de-wg0">INC-004 : Aucun handshake après le redémarrage de <code>wg0</code></h3>
 <ul>
 <li><b>Symptôme :</b> après <code>systemctl restart wg-quick@wg0</code> (ajout du NAT vers <code>wlo1</code>), <code>wg show</code> n'affiche ni <code>endpoint</code>, ni <code>handshake</code>, ni trafic, et <code>tcpdump -ni wg0</code> reste vide.</li>
 <li><b>Piste suivie :</b> le tunnel côté téléphone n'était pas réactivé ; un test depuis le Wi-Fi du domicile peut aussi échouer (certains routeurs ne gèrent pas ce retour). La cause exacte n'a pas été confirmée.</li>
@@ -308,7 +308,7 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Observation liée :</b> une capture <code>tcpdump -ni wlo1 icmp</code> ne montrait que les pings du routeur vers le serveur (surveillance de routine), qui masquaient le test. Il faut filtrer par adresse source pour isoler le trafic recherché.</li>
 <li><b>Statut :</b> résolu, cause racine non confirmée.</li>
 </ul>
-<h3 id="inc-005-duckdns-ko">INC-005 — La mise à jour DuckDNS répond <code>KO</code></h3>
+<h3 id="inc-005-duckdns-ko">INC-005 : La mise à jour DuckDNS répond <code>KO</code></h3>
 <ul>
 <li><b>Symptôme :</b> <code>/opt/duckdns/duck.log</code> contient <code>KO</code>, alors que la résolution DNS renvoie la bonne adresse (enregistrée plus tôt).</li>
 <li><b>Cause :</b> le paramètre <code>domains=</code> du script se terminait par un point (<code>nom.</code>), que DuckDNS ne reconnaît pas. Le nom doit être donné sans point et sans <code>.duckdns.org</code>.</li>
@@ -382,7 +382,7 @@ peer: &lt;clé publique du téléphone&gt;
 <hr />
 <h2 id="projet-associe">Projet associé</h2>
 <p>Le même protocole de raisonnement s'applique à un autre type d'interconnexion : la fiche <a href="interconnexion-de-deux-sites-d-entreprise-par-vpn-ipsec-ikev.html">Interconnexion de deux sites par VPN IPsec IKEv2</a> relie deux réseaux d'entreprise entre pare-feu FortiGate, là où cette fiche donne à un seul utilisateur un accès distant à un laboratoire.</p>
-<h1 id="pilotage-du-projet-pratiques-inspirees-ditil-4">Pilotage du projet — pratiques de gestion inspirées d'ITIL 4</h1>
+<h1 id="pilotage-du-projet-pratiques-inspirees-ditil-4">Pilotage du projet : pratiques de gestion inspirées d'ITIL 4</h1>
 <blockquote><p><strong>Périmètre de ce bilan :</strong> les éléments cochés correspondent aux réalisations visibles dans la fiche et aux preuves associées. Il s'agit d'une démarche de laboratoire inspirée d'ITIL 4, et non d'une certification ITIL ni de la preuve d'un processus ITSM formel.</p></blockquote>
 <h2 id="itil-1-cadrage">1. Cadrage et définition du service</h2>
 <ul>
