@@ -32,7 +32,7 @@
     targets.forEach((el) => el.classList.add('is-visible'));
   }
 
-  // Agrandissement accessible des captures et photos des fiches projets.
+  // Loupe accessible pour toutes les images des fiches projets.
   const lightbox = document.createElement('dialog');
   lightbox.className = 'image-lightbox';
   lightbox.setAttribute('aria-label', 'Aperçu agrandi de l’image');
@@ -52,23 +52,41 @@
     if (lightbox.open) lightbox.close();
     lightboxImage.removeAttribute('src');
   };
-  closeButton.addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', (event) => {
-    if (event.target === lightbox) closeLightbox();
-  });
-  lightbox.addEventListener('close', () => {
-    lightboxImage.removeAttribute('src');
-  });
-
-  document.addEventListener('click', (event) => {
-    const image = event.target.closest('.article img');
-    if (!image || !image.src) return;
-    event.preventDefault();
+  const openLightbox = (image) => {
+    if (!image || (!image.currentSrc && !image.src)) return;
     lightboxImage.src = image.currentSrc || image.src;
     lightboxImage.alt = image.alt || 'Image agrandie';
     const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
     lightboxCaption.textContent = caption || image.alt || '';
     lightboxCaption.hidden = !lightboxCaption.textContent;
     if (typeof lightbox.showModal === 'function') lightbox.showModal();
+  };
+
+  document.querySelectorAll('.article img').forEach((image) => {
+    image.tabIndex = 0;
+    image.setAttribute('role', 'button');
+    image.setAttribute('aria-label', image.alt ? 'Agrandir : ' + image.alt : 'Agrandir l’image');
+  });
+  closeButton.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (event) => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  lightbox.addEventListener('close', () => lightboxImage.removeAttribute('src'));
+
+  document.addEventListener('click', (event) => {
+    const image = event.target.closest?.('.article img');
+    if (!image) return;
+    event.preventDefault();
+    openLightbox(image);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const image = event.target.closest?.('.article img');
+      if (image) {
+        event.preventDefault();
+        openLightbox(image);
+      }
+    }
+    if (event.key === 'Escape' && lightbox.open) closeLightbox();
   });
 })();
