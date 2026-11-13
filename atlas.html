@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATLAS | Projet d'automatisation IA | Joris Allabi</title>
+<meta name="description" content="Étude technique du projet ATLAS : assistant Telegram local, workflows n8n, agents spécialisés et automatisation contrôlée.">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/portfolio.css"><link rel="stylesheet" href="assets/atlas.css"><link rel="stylesheet" href="assets/monochrome.css"><link rel="stylesheet" href="assets/atlas-page.css"></head>
+<body class="atlas-page"><header class="top"><div class="wrap bar"><a class="brand" href="index.html">JORIS ALLABI <span class="micro">/ PORTFOLIO</span></a><nav aria-label="Navigation principale"><a href="index.html#projets-automation">Projets IA</a><a href="index.html#profil">Profil</a><a href="index.html#contact">Contact</a></nav></div></header>
+<main class="wrap atlas-standalone"><p class="crumb"><a href="index.html#projets-automation">← Retour aux projets</a></p><div class="atlas-modal-body">
+<p class="atlas-modal-kicker">09 / Projet phare · Système local multi-agents</p>
+<h2 class="atlas-modal-title" id="atlas-modal-title">ATLAS — Assistant Personnel &amp; Orchestrateur d'Agents IA</h2>
+<p class="atlas-modal-lead">Un système personnel piloté par Telegram, construit sur n8n et exécuté localement. ATLAS distribue les demandes vers des modules spécialisés pour les tâches, l'agenda, les projets et la recherche d'emploi au Bénin. La base de données reste la source de vérité ; l'IA aide à interpréter et planifier, mais le code valide et exécute.</p>
+<div class="atlas-meta-strip"><span>n8n auto-hébergé</span><span>Ollama · qwen3.5:9b</span><span>Supabase / PostgREST</span><span>Telegram · Trello · Google Agenda</span><span>Audit technique · 13.11.2026</span></div>
+<nav class="atlas-modal-nav" aria-label="Navigation de l'étude de cas"><a href="#atlas-architecture">Architecture</a><a href="#atlas-jarvis">JARVIS</a><a href="#atlas-jericho">JERICHO</a><a href="#atlas-engineering">Ingénierie</a><a href="#atlas-data">Données &amp; limites</a></nav>
+
+<section class="atlas-section" id="atlas-architecture">
+<p class="atlas-modal-kicker">01 / Architecture &amp; flux</p><h3>Un point d'entrée, des agents spécialisés, une base centrale.</h3>
+<p>Telegram déclenche le routeur ATLAS via un webhook exposé par ngrok. Le webhook répond immédiatement à Telegram, puis le planificateur intercepte les demandes de projets et les listes de tâches. Les autres messages sont routés vers JARVIS ou JERICHO selon leur nature.</p>
+<div class="atlas-flow"><div class="atlas-flow-item"><b>01 · Telegram</b><small>Interface conversationnelle et boutons de validation</small></div><div class="atlas-flow-item"><b>02 · ATLAS</b><small>Contrôles d'accès, anti-doublon et routage</small></div><div class="atlas-flow-item"><b>03 · Ollama</b><small>Interprétation du texte libre et appels d'outils</small></div><div class="atlas-flow-item"><b>04 · Modules</b><small>JARVIS · JERICHO · synchronisation Trello</small></div><div class="atlas-flow-item"><b>05 · Base</b><small>État de référence, journaux et files d'actions</small></div></div>
+<div class="atlas-note"><strong>Repli tolérant aux pannes :</strong> si Ollama ne répond pas, le routeur envoie le message vers JERICHO au lieu de le perdre. Les commandes JARVIS explicites et les callbacks de boutons suivent des chemins déterministes, sans dépendre du LLM.</div>
+<h4>Rôle exact du LLM</h4><p>Le modèle local qwen3.5:9b est appelé avec une température de 0,1 et une sortie d'appel d'outils. Son périmètre est volontairement réduit : traduire une phrase libre en une commande structurée et proposer un plan de projet en JSON contraint. Il n'effectue aucune écriture directement. Une fonction de planification convertit l'appel d'outil en commande ; les modules métier et la base contrôlent ensuite les données et l'exécution.</p>
+<h4>Quatre workflows publiés</h4>
+<div class="atlas-module-grid">
+<article class="atlas-module"><span class="module-id">01 / ROUTAGE</span><h4>ATLAS · Routeur Telegram</h4><p>Point d'entrée, vérifications de sécurité, routage des commandes et planification assistée.</p></article>
+<article class="atlas-module"><span class="module-id">02 / PRODUCTIVITÉ</span><h4>JARVIS · Tâches &amp; agenda</h4><p>Gestion déterministe des tâches, événements, projets et rappels, avec synchronisation Google Agenda.</p></article>
+<article class="atlas-module"><span class="module-id">03 / COLLECTE</span><h4>JERICHO · Emploi</h4><p>Scraping multi-sources, notation, suivi des offres et validation humaine, sans LLM.</p></article>
+<article class="atlas-module"><span class="module-id">04 / SYNCHRONISATION</span><h4>TRELLO · Vue globale</h4><p>Synchronisation bidirectionnelle entre la base et les cartes Trello, avec détection des changements.</p></article>
+</div></section>
+
+<section class="atlas-section" id="atlas-jarvis">
+<p class="atlas-modal-kicker">02 / Module JARVIS</p><h3>Transformer les demandes en actions traçables.</h3>
+<p>JARVIS gère les tâches, les événements et les projets. L'analyse des commandes courantes repose sur des expressions régulières, des règles métier et des requêtes SQL : aucune génération libre par LLM n'intervient dans l'exécution quotidienne.</p>
+<div class="atlas-metrics"><div class="atlas-metric"><strong>20</strong><span>Tâches max. par lot</span></div><div class="atlas-metric"><strong>1</strong><span>Écriture atomique du lot</span></div><div class="atlas-metric"><strong>3</strong><span>Niveaux d'autonomie</span></div><div class="atlas-metric"><strong>1 RPC</strong><span>Arbre projet transactionnel</span></div></div>
+<div class="atlas-detail-list">
+<details open><summary>Gestion déterministe des tâches et de l'agenda</summary><p>Dates, heures, durées, priorités et lieux sont extraits par règles et expressions régulières. JARVIS gère les tâches en retard, les échéances, les événements, les conflits de calendrier et les rappels à envoi unique. Une modification d'heure réarme le rappel.</p></details>
+<details><summary>Planification de projets complexes</summary><p>ATLAS pose d'abord des questions de clarification, puis le LLM propose un plan JSON : jalons, tâches, durées et dépendances. Le code contrôle les références, les limites, les dépendances et les cycles. Le calendrier est ensuite calculé par le code selon la capacité hebdomadaire ; le LLM ne choisit aucune date. Un aperçu est présenté pour validation avant création.</p></details>
+<details><summary>Transactions, validation et idempotence</summary><p>Les lots sont intégralement validés avant la moindre écriture, puis insérés en une seule opération. La décomposition d'un projet passe par la fonction SQL atlas_create_project_tree : projet, jalons, tâches et dépendances sont créés ensemble ou pas du tout. Un request_id unique empêche une demande rejouée de créer des doublons.</p></details>
+</div></section>
+
+<section class="atlas-section" id="atlas-jericho">
+<p class="atlas-modal-kicker">03 / Module JERICHO</p><h3>Un pipeline d'offres d'emploi sans intelligence artificielle générative.</h3>
+<p>JERICHO collecte des offres sur cinq sources béninoises : quatre sites HTML et une API JSON. Le traitement est déterministe, depuis l'extraction jusqu'à la notation et à la déduplication.</p>
+<div class="atlas-flow"><div class="atlas-flow-item"><b>Collecte</b><small>Pages et API · requêtes parallèles</small></div><div class="atlas-flow-item"><b>Filtrage</b><small>Liens et mots-clés du profil</small></div><div class="atlas-flow-item"><b>Extraction</b><small>Titre, entreprise, lieu, date limite</small></div><div class="atlas-flow-item"><b>Scoring</b><small>Poids techniques et pénalités</small></div><div class="atlas-flow-item"><b>Validation</b><small>Approbation ou rejet sur Telegram</small></div></div>
+<div class="atlas-detail-list">
+<details open><summary>Notation pondérée de 0 à 100</summary><p>Les mots-clés du profil réseaux et systèmes ont des poids différents. FortiGate / Fortinet valent 5 points ; Cisco, CCNA, CCNP, MPLS, BGP, VMware et ESXi valent 4 ; VPN, IPsec, firewall, Zabbix, VoIP et Active Directory valent 3. Un mot-clé présent dans le titre voit son poids doublé ; des intitulés hors profil retirent des points.</p></details>
+<details><summary>Déduplication et critères d'éligibilité</summary><p>Une clé de déduplication fondée sur le titre normalisé et l'entreprise complète le contrôle d'URL unique. Une offre est proposée à l'approbation si son score atteint le seuil configuré, si elle n'est pas expirée et si elle est localisée au Bénin. Les doublons sont identifiés sans appel au LLM.</p></details>
+<details><summary>Suivi avec validation humaine</summary><p>Chaque offre candidate est envoyée sur Telegram avec son score, l'entreprise, le lieu, la date limite, les mots-clés détectés et un lien. L'utilisateur peut approuver ou écarter ; les offres approuvées entrent dans le suivi de candidature. Les erreurs de sources sont signalées comme collecte partielle.</p></details>
+</div></section>
+
+<section class="atlas-section" id="atlas-engineering">
+<p class="atlas-modal-kicker">04 / Rigueur d'ingénierie</p><h3>La fiabilité est portée par le code, la base et les garde-fous.</h3>
+<p>ATLAS sépare les décisions probabilistes de l'exécution métier. Les modules écrivent en base ; Trello et Google Agenda reflètent cet état et peuvent renvoyer les modifications utilisateur vers la base selon des règles explicites.</p>
+<h4>Niveaux d'autonomie</h4><div class="atlas-levels">
+<div class="atlas-level"><b>Niveau A</b><span>Exécution directe pour les actions autorisées par la règle configurée.</span></div>
+<div class="atlas-level"><b>Niveau B</b><span>Exécution avec notification, pour garder une trace visible.</span></div>
+<div class="atlas-level"><b>Niveau C</b><span>Validation requise avant écriture. C'est le niveau par défaut si la règle est absente ou illisible.</span></div>
+</div>
+<h4>Synchronisation bidirectionnelle</h4><div class="atlas-module-grid">
+<article class="atlas-module"><span class="module-id">BASE ↔ TRELLO</span><h4>Résolution par instantané</h4><p>Le système conserve un instantané de la liste et de l'échéance. Un changement de carte est répercuté en base via les outils métier ; sinon, les changements de la base mettent à jour la carte. L'origine des appels évite les boucles.</p></article>
+<article class="atlas-module"><span class="module-id">BASE ↔ GOOGLE AGENDA</span><h4>Conflits arbitrés</h4><p>Si la base n'a pas changé depuis le dernier envoi, Google gagne. Si les deux côtés ont changé, la base gagne. Une propriété privée jarvis relie les événements et empêche les doublons.</p></article>
+</div>
+<h4>Contrôles transverses</h4><ul>
+<li><strong>Idempotence :</strong> identifiants de requête uniques, anti-doublon Telegram, clés uniques et boutons à usage unique.</li>
+<li><strong>Atomicité :</strong> validation avant écriture, insertion de lots en une fois et transaction SQL pour les arbres de projets.</li>
+<li><strong>Human-in-the-loop :</strong> confirmations des actions destructives, aperçu de projet avant création et approbation des offres.</li>
+<li><strong>Dégradation gracieuse :</strong> repli du routeur, notifications non bloquantes et synchronisation Trello de rattrapage toutes les 30 minutes.</li>
+<li><strong>Traçabilité :</strong> journaux JARVIS / JERICHO, table des exécutions agents et file d'actions.</li>
+</ul></section>
+
+<section class="atlas-section" id="atlas-data">
+<p class="atlas-modal-kicker">05 / Données, sécurité &amp; limites</p><h3>Une architecture documentée à partir des workflows observés.</h3>
+<p>La base de données est la source de vérité. Les workflows utilisent une API REST de type Supabase / PostgREST sur une instance locale, des fonctions SQL RPC et des tables dédiées aux tâches, événements, projets, offres, journaux et règles d'autonomie.</p>
+<div class="atlas-note"><strong>Précision technique :</strong> l'audit a reconstitué le modèle de données à partir des requêtes observées ; le schéma SQL réel n'a pas été inspecté. La formulation « PostgreSQL / Supabase » désigne ici la couche REST/RPC telle qu'elle apparaît dans le code, pas une validation indépendante de l'installation PostgreSQL.</div>
+<h4>Mesures de sécurité observées</h4><p>Secret Telegram, liste blanche d'un seul chat, jetons dédiés par webhook, masquage des jetons dans les erreurs, contrôle de doublons et contrats JSON homogènes. Les appels inter-workflows passent par des webhooks locaux protégés.</p>
+<h4>Limites et points à traiter</h4><p>L'audit a relevé des secrets présents en clair dans plusieurs nœuds et workflows. Ils doivent être régénérés et déplacés vers les credentials n8n ou des variables d'environnement avant toute exposition publique du dépôt ou de captures de configuration. Un échec sur douze exécutions récentes de JARVIS était visible ; sa cause n'a pas été analysée. L'intervalle exact du cron de rappels JARVIS reste à confirmer dans l'interface.</p>
+<div class="atlas-modal-foot"><span>Source : documentation technique ATLAS · audit du 13 novembre 2026</span><button class="atlas-close" type="button" data-atlas-close>Fermer l'étude ↗</button></div>
+</section>
+</div></main>
+<footer><div class="footer-inner"><span>© 2026 Joris Allabi</span><span>Portfolio technique</span><span>Cotonou, Bénin</span></div></footer></body></html>
