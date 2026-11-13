@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Supervision et gestion des incidents avec Zabbix + GLPI et sauvegarde/restauration avec Veeam — Joris Allabi</title><meta name="description" content="Projet en planification, non réalisé. Périmètre : Zabbix + GLPI + Veeam sous VMware Workstation, sans Hyper-V imbriqué. TrueNAS est disponible comme cible ">
+<title>Supervision et gestion des incidents avec Zabbix + GLPI et sauvegarde/restauration avec Veeam : Joris Allabi</title><meta name="description" content="Projet en planification, non réalisé. Périmètre : Zabbix + GLPI + Veeam sous VMware Workstation, sans Hyper-V imbriqué. TrueNAS est disponible comme cible ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"></head><body>
@@ -24,9 +24,9 @@
 <p><strong>Objectif professionnel :</strong> démontrer une chaîne d'exploitation complète : observer → détecter → alerter → enregistrer → diagnostiquer → rétablir → sauvegarder/restaurer → documenter → améliorer.</p>
 <h2 id="pages-existantes-associees">Pages existantes associées</h2>
 <ul>
-<li><a href="infrastructure-windows-server-resiliente-ad-ds-dns-dhcp-gpo.html">Infrastructure Windows Server résiliente : AD DS, DNS, DHCP, GPO et contrôleur secondaire</a> — annuaire et services Windows Server, à réutiliser comme référence sans dupliquer les travaux.</li>
-<li><a href="supervision-zabbix-en-tres-haute-disponibilite-reseau-campus.html">Supervision Zabbix en très haute disponibilité : réseau campus redondant (HSRP, OSPF, LACP), SD-WAN double ISP et cluster Hyper-V sur stockage iSCSI</a> — supervision Zabbix et gestion des incidents GLPI, à aligner sur ce périmètre intégré.</li>
-<li><a href="methode.html">Méthode d’ingénierie IT — Checklist projet inspirée d’ITIL 4</a> — méthode commune de pilotage inspirée d'ITIL.</li>
+<li><a href="infrastructure-windows-server-resiliente-ad-ds-dns-dhcp-gpo.html">Infrastructure Windows Server résiliente : AD DS, DNS, DHCP, GPO et contrôleur secondaire</a> : annuaire et services Windows Server, à réutiliser comme référence sans dupliquer les travaux.</li>
+<li><a href="supervision-zabbix-en-tres-haute-disponibilite-reseau-campus.html">Supervision Zabbix en très haute disponibilité : réseau campus redondant (HSRP, OSPF, LACP), SD-WAN double ISP et cluster Hyper-V sur stockage iSCSI</a> : supervision Zabbix et gestion des incidents GLPI, à aligner sur ce périmètre intégré.</li>
+<li><a href="methode.html">Méthode d’ingénierie IT : Checklist projet inspirée d’ITIL 4</a> : méthode commune de pilotage inspirée d'ITIL.</li>
 </ul>
 <h2 id="1-cadrage">1. Cadrage</h2>
 <h3 id="ressources-et-contraintes">Ressources et contraintes</h3>
@@ -65,18 +65,18 @@
 <li>Distinguer une sauvegarde réussie d'une restauration réellement testée.</li>
 <li>Ne pas exposer les interfaces d'administration à Internet ; rester sur des réseaux de laboratoire contrôlés.</li>
 </ul>
-<h3 id="architecture-ajustee-ressources-reellement-disponibles">Architecture ajustée — ressources réellement disponibles</h3>
+<h3 id="architecture-ajustee-ressources-reellement-disponibles">Architecture ajustée : ressources réellement disponibles</h3>
 <p><strong>Contraintes confirmées :</strong> les deux PC restent sous Windows 11 Pro + VMware Workstation ; chaque SSD de 512 Go n'a que 100–200 Go libres ; un TrueNAS distinct est disponible. Aucun Hyper-V imbriqué dans ce projet.</p>
-<pre><code>PC 1 — i5-12400F / 32 Go / VMware Workstation / 100–200 Go libres
-├── WIN-TARGET01 — Windows Server 2022, 2 vCPU, 3–4 Go RAM, disque dynamique 50–60 Go
-├── DC1 — Windows Server avec AD DS/DNS, à ajouter ultérieurement si les scénarios AD le nécessitent
-└── VBR01 — Windows Server, à déployer seulement à la phase Veeam ; réserver au moins 16 Go RAM et vérifier les exigences CPU/disque de la version exacte avant installation. La documentation Veeam v13 Windows-based indique 8 vCPU minimum ; prévoir d'arrêter les autres VM pendant les tests.
+<pre><code>PC 1 : i5-12400F / 32 Go / VMware Workstation / 100–200 Go libres
+├── WIN-TARGET01 : Windows Server 2022, 2 vCPU, 3–4 Go RAM, disque dynamique 50–60 Go
+├── DC1 : Windows Server avec AD DS/DNS, à ajouter ultérieurement si les scénarios AD le nécessitent
+└── VBR01 : Windows Server, à déployer seulement à la phase Veeam ; réserver au moins 16 Go RAM et vérifier les exigences CPU/disque de la version exacte avant installation. La documentation Veeam v13 Windows-based indique 8 vCPU minimum ; prévoir d'arrêter les autres VM pendant les tests.
 
-PC 2 — i7-9850H / 32 Go / VMware Workstation / 100–200 Go libres
-├── MON01 — Ubuntu Server LTS avec Zabbix + GLPI, 4 vCPU, 6 Go RAM, disque dynamique 50 Go
-└── LINUX-TARGET01 — Linux, 1 vCPU, 1–2 Go RAM, disque dynamique 15–20 Go
+PC 2 : i7-9850H / 32 Go / VMware Workstation / 100–200 Go libres
+├── MON01 : Ubuntu Server LTS avec Zabbix + GLPI, 4 vCPU, 6 Go RAM, disque dynamique 50 Go
+└── LINUX-TARGET01 : Linux, 1 vCPU, 1–2 Go RAM, disque dynamique 15–20 Go
 
-TrueNAS — cible de sauvegarde distincte
+TrueNAS : cible de sauvegarde distincte
 └── Partage SMB dédié au labo, réservé au compte de service Veeam, avec quota si possible
 </code></pre>
 <p>Les tailles de disques indiquées sont des plafonds virtuels dynamiques, pas de l'espace physique réservé intégralement ; surveiller l'espace réel et conserver une marge confortable pour Windows 11 et VMware. Ne crée pas de VM REPO01 : utilise le TrueNAS existant comme cible SMB à la phase Veeam. Veeam prend en charge les partages SMB comme dépôts, avec un serveur gateway Windows dans l'infrastructure de sauvegarde : <a href="https://helpcenter.veeam.com/docs/vbr/userguide/smb_share.html">documentation du dépôt SMB</a>.</p>
@@ -166,8 +166,8 @@ TrueNAS — cible de sauvegarde distincte
 <tr>
 <td>Dépôt Veeam</td>
 <td>TrueNAS</td>
-<td>—</td>
-<td>—</td>
+<td>:</td>
+<td>:</td>
 <td>Dataset/partage SMB dédié, dimensionné selon capacité réelle</td>
 </tr>
 </tbody>
@@ -182,24 +182,24 @@ TrueNAS — cible de sauvegarde distincte
 <li>Éviter Docker et les couches inutiles : installer les composants dans des VM classiques pour comprendre les services, journaux, ports et dépendances.</li>
 </ul>
 <p><strong>Livrables de conception :</strong> schéma logique, inventaire des VM, plan IP, matrice des flux, allocation CPU/RAM/disque, choix des versions, registre des risques et plan de sauvegarde du laboratoire lui-même.</p>
-<h2 id="phase-1-preparation-et-socle-minimal">Phase 1 — préparation et socle minimal</h2>
+<h2 id="phase-1-preparation-et-socle-minimal">Phase 1 : préparation et socle minimal</h2>
 <p><strong>Objectif :</strong> obtenir une connectivité fiable entre les deux PC et déployer uniquement les VM nécessaires à la première étape de supervision. Les systèmes des PC physiques restent inchangés ; pas d'Hyper-V imbriqué.</p>
-<h3 id="etape-1-inventaire-avant-modification">Étape 1 — inventaire avant modification</h3>
+<h3 id="etape-1-inventaire-avant-modification">Étape 1 : inventaire avant modification</h3>
 <ul>
-<li>— À réaliser : Sur chaque PC, ouvrir PowerShell et exécuter <code>ipconfig /all</code>; noter IPv4, masque, passerelle, DNS et interface réseau active.</li>
-<li>— À réaliser : Vérifier l'espace libre exact sur chaque SSD ; les catégories 100–200 Go sont indicatives, il faut relever la valeur réelle avant de créer les disques.</li>
-<li>— À réaliser : Relever la version de VMware Workstation et vérifier que la virtualisation matérielle est activée.</li>
-<li>— À réaliser : Sur TrueNAS, relever l'adresse IP, l'espace libre du pool/dataset et la configuration réseau.</li>
-<li>— À réaliser : Choisir une plage IP de laboratoire sans chevauchement avec le LAN, le VPN ou d'autres laboratoires. Ne pas inventer d'adresses avant d'avoir vérifié le réseau réel.</li>
+<li>: À réaliser : Sur chaque PC, ouvrir PowerShell et exécuter <code>ipconfig /all</code>; noter IPv4, masque, passerelle, DNS et interface réseau active.</li>
+<li>: À réaliser : Vérifier l'espace libre exact sur chaque SSD ; les catégories 100–200 Go sont indicatives, il faut relever la valeur réelle avant de créer les disques.</li>
+<li>: À réaliser : Relever la version de VMware Workstation et vérifier que la virtualisation matérielle est activée.</li>
+<li>: À réaliser : Sur TrueNAS, relever l'adresse IP, l'espace libre du pool/dataset et la configuration réseau.</li>
+<li>: À réaliser : Choisir une plage IP de laboratoire sans chevauchement avec le LAN, le VPN ou d'autres laboratoires. Ne pas inventer d'adresses avant d'avoir vérifié le réseau réel.</li>
 </ul>
-<h3 id="etape-2-reseau-vmware">Étape 2 — réseau VMware</h3>
+<h3 id="etape-2-reseau-vmware">Étape 2 : réseau VMware</h3>
 <ul>
-<li>— À réaliser : Pour la première version, connecter les VM nécessaires au réseau <strong>Bridged</strong> relié au LAN qui permet aux deux PC et à TrueNAS de communiquer ; réserver les adresses DHCP dans le routeur ou attribuer des IP statiques vérifiées.</li>
-<li>— À réaliser : Si le routeur gère les VLAN, préférer un VLAN de labo dédié. Sinon, conserver le LAN existant avec pare-feu Windows/Linux strict et aucune redirection de port depuis Internet.</li>
-<li>— À réaliser : Ne pas utiliser uniquement Host-only pour les communications inter-PC : les réseaux Host-only de Workstation sont locaux à chaque PC.</li>
-<li>— À réaliser : Tester depuis les VM la passerelle, la communication inter-hôtes et l'accès au TrueNAS ; noter les résultats. Ne pas exposer les interfaces d'administration à Internet.</li>
+<li>: À réaliser : Pour la première version, connecter les VM nécessaires au réseau <strong>Bridged</strong> relié au LAN qui permet aux deux PC et à TrueNAS de communiquer ; réserver les adresses DHCP dans le routeur ou attribuer des IP statiques vérifiées.</li>
+<li>: À réaliser : Si le routeur gère les VLAN, préférer un VLAN de labo dédié. Sinon, conserver le LAN existant avec pare-feu Windows/Linux strict et aucune redirection de port depuis Internet.</li>
+<li>: À réaliser : Ne pas utiliser uniquement Host-only pour les communications inter-PC : les réseaux Host-only de Workstation sont locaux à chaque PC.</li>
+<li>: À réaliser : Tester depuis les VM la passerelle, la communication inter-hôtes et l'accès au TrueNAS ; noter les résultats. Ne pas exposer les interfaces d'administration à Internet.</li>
 </ul>
-<h3 id="etape-3-creer-les-quatre-vm-de-depart">Étape 3 — créer les quatre VM de départ</h3>
+<h3 id="etape-3-creer-les-quatre-vm-de-depart">Étape 3 : créer les quatre VM de départ</h3>
 <table>
 <thead>
 <tr>
@@ -237,7 +237,7 @@ TrueNAS — cible de sauvegarde distincte
 <td>15–20 Go</td>
 </tr>
 <tr>
-<td>- — À réaliser : Créer les VM une par une avec disques dynamiques, si cette option est disponible.</td>
+<td>-À faire : Créer les VM une par une avec disques dynamiques, si cette option est disponible.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -245,7 +245,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Installer WIN-TARGET01 et LINUX-TARGET01 en premier ; ensuite MON01. Vérifier la charge de l'hôte et l'espace disque après chaque installation.</td>
+<td>-À faire : Installer WIN-TARGET01 et LINUX-TARGET01 en premier ; ensuite MON01. Vérifier la charge de l'hôte et l'espace disque après chaque installation.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -253,7 +253,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Sur Linux, installer sans interface graphique ; installer les mises à jour et activer SSH uniquement pour l'administration depuis le réseau de labo.</td>
+<td>-À faire : Sur Linux, installer sans interface graphique ; installer les mises à jour et activer SSH uniquement pour l'administration depuis le réseau de labo.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -261,7 +261,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Attribuer un nom unique à chaque VM et consigner OS/version, IP, réseau, CPU, RAM, disque et rôle.</td>
+<td>-À faire : Attribuer un nom unique à chaque VM et consigner OS/version, IP, réseau, CPU, RAM, disque et rôle.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -269,7 +269,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Ne pas créer DC1 à cette étape : on l'ajoutera si un scénario AD/GPO/DNS est nécessaire. La première phase utilise un Windows Server et un Linux comme cibles.</td>
+<td>-À faire : Ne pas créer DC1 à cette étape : on l'ajoutera si un scénario AD/GPO/DNS est nécessaire. La première phase utilise un Windows Server et un Linux comme cibles.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -277,7 +277,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Ne pas faire tourner toutes les VM simultanément si la mémoire manque ; commencer avec MON01 et une cible, puis démarrer l'autre cible quand nécessaire.</td>
+<td>-À faire : Ne pas faire tourner toutes les VM simultanément si la mémoire manque ; commencer avec MON01 et une cible, puis démarrer l'autre cible quand nécessaire.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -285,7 +285,7 @@ TrueNAS — cible de sauvegarde distincte
 <td></td>
 </tr>
 <tr>
-<td>- — À réaliser : Ne pas déployer VBR01 ni de VM dépôt à cette étape. Le TrueNAS sera la cible SMB à la phase Veeam.</td>
+<td>-À faire : Ne pas déployer VBR01 ni de VM dépôt à cette étape. Le TrueNAS sera la cible SMB à la phase Veeam.</td>
 <td></td>
 <td></td>
 <td></td>
@@ -294,140 +294,140 @@ TrueNAS — cible de sauvegarde distincte
 </tr>
 </tbody>
 </table>
-<h3 id="etape-4-criteres-de-sortie-de-phase-1">Étape 4 — critères de sortie de Phase 1</h3>
+<h3 id="etape-4-criteres-de-sortie-de-phase-1">Étape 4 : critères de sortie de Phase 1</h3>
 <ul>
-<li>— À réaliser : Les VM créées démarrent et s'arrêtent proprement.</li>
-<li>— À réaliser : Chaque VM possède un nom et une IP sans conflit, consignés dans l'inventaire.</li>
-<li>— À réaliser : Les VM nécessaires peuvent communiquer entre les deux PC et atteindre TrueNAS selon les flux prévus.</li>
-<li>— À réaliser : Les systèmes invités sont à jour et les mots de passe par défaut ont été changés.</li>
-<li>— À réaliser : Le projet contient un schéma réseau, un inventaire des VM, une preuve de connectivité et la capacité disque restante.</li>
-<li>— À réaliser : Aucun port d'administration n'est publié sur Internet.</li>
+<li>: À réaliser : Les VM créées démarrent et s'arrêtent proprement.</li>
+<li>: À réaliser : Chaque VM possède un nom et une IP sans conflit, consignés dans l'inventaire.</li>
+<li>: À réaliser : Les VM nécessaires peuvent communiquer entre les deux PC et atteindre TrueNAS selon les flux prévus.</li>
+<li>: À réaliser : Les systèmes invités sont à jour et les mots de passe par défaut ont été changés.</li>
+<li>: À réaliser : Le projet contient un schéma réseau, un inventaire des VM, une preuve de connectivité et la capacité disque restante.</li>
+<li>: À réaliser : Aucun port d'administration n'est publié sur Internet.</li>
 </ul>
 <p><strong>Ne passe pas à l'installation de Zabbix tant que</strong> l'adressage, la connectivité, l'espace disque et les ressources attribuées ne sont pas documentés.</p>
 <h2 id="3-preparation-et-gestion-du-changement">3. Préparation et gestion du changement</h2>
 <ul>
-<li>— À réaliser : Inventorier les deux PC, l'espace disque libre, la mémoire disponible, la version VMware Workstation et les réseaux existants.</li>
-<li>— À réaliser : Vérifier les ISO, licences/éditions et prérequis des versions choisies avant toute installation.</li>
-<li>— À réaliser : Créer les réseaux VMware et tester la connectivité de base avant d'installer les applications.</li>
-<li>— À réaliser : Créer les VM une par une et noter leurs ressources réelles. Zabbix et GLPI partagent MON01, mais conservent des bases de données, comptes applicatifs et configurations séparés.</li>
-<li>— À réaliser : Préparer les comptes de service et le plan de gestion des secrets.</li>
-<li>— À réaliser : Définir le jeu de données non sensible à sauvegarder/restaurer.</li>
-<li>— À réaliser : Pour chaque changement important, noter objectif, impact, risque, test de réussite, retour arrière et preuve attendue.</li>
-<li>— À réaliser : Définir la rétention des sauvegardes de test et vérifier que le dépôt dispose d'espace.</li>
-<li>— À réaliser : Ne pas sauvegarder des données personnelles ou professionnelles réelles dans le laboratoire sans autorisation.</li>
+<li>: À réaliser : Inventorier les deux PC, l'espace disque libre, la mémoire disponible, la version VMware Workstation et les réseaux existants.</li>
+<li>: À réaliser : Vérifier les ISO, licences/éditions et prérequis des versions choisies avant toute installation.</li>
+<li>: À réaliser : Créer les réseaux VMware et tester la connectivité de base avant d'installer les applications.</li>
+<li>: À réaliser : Créer les VM une par une et noter leurs ressources réelles. Zabbix et GLPI partagent MON01, mais conservent des bases de données, comptes applicatifs et configurations séparés.</li>
+<li>: À réaliser : Préparer les comptes de service et le plan de gestion des secrets.</li>
+<li>: À réaliser : Définir le jeu de données non sensible à sauvegarder/restaurer.</li>
+<li>: À réaliser : Pour chaque changement important, noter objectif, impact, risque, test de réussite, retour arrière et preuve attendue.</li>
+<li>: À réaliser : Définir la rétention des sauvegardes de test et vérifier que le dépôt dispose d'espace.</li>
+<li>: À réaliser : Ne pas sauvegarder des données personnelles ou professionnelles réelles dans le laboratoire sans autorisation.</li>
 </ul>
 <p><strong>Livrable :</strong> plan de déploiement séquencé et fiches de changement.</p>
-<h2 id="4-tests-et-validation-parcours-dimplementation">4. Tests et validation — parcours d'implémentation</h2>
-<h3 id="phase-a-socle-et-inventaire">Phase A — Socle et inventaire</h3>
+<h2 id="4-tests-et-validation-parcours-dimplementation">4. Tests et validation : parcours d'implémentation</h2>
+<h3 id="phase-a-socle-et-inventaire">Phase A : Socle et inventaire</h3>
 <ul>
-<li>— À réaliser : Créer DC1 uniquement si nécessaire pour les scénarios Windows ; configurer IP fixe, DNS et domaine de laboratoire.</li>
-<li>— À réaliser : Créer WIN-TARGET01 et LINUX-TARGET01 avec des données synthétiques.</li>
-<li>— À réaliser : Documenter les noms, adresses, rôles, versions, services et dépendances.</li>
-<li>— À réaliser : Vérifier que les VM communiquent uniquement sur les réseaux prévus.</li>
-<li>— À réaliser : Installer les mises à jour et activer les journaux utiles.</li>
-<li>— À réaliser : Définir les conditions de référence : CPU au repos, RAM, espace disque, services et disponibilité.</li>
+<li>: À réaliser : Créer DC1 uniquement si nécessaire pour les scénarios Windows ; configurer IP fixe, DNS et domaine de laboratoire.</li>
+<li>: À réaliser : Créer WIN-TARGET01 et LINUX-TARGET01 avec des données synthétiques.</li>
+<li>: À réaliser : Documenter les noms, adresses, rôles, versions, services et dépendances.</li>
+<li>: À réaliser : Vérifier que les VM communiquent uniquement sur les réseaux prévus.</li>
+<li>: À réaliser : Installer les mises à jour et activer les journaux utiles.</li>
+<li>: À réaliser : Définir les conditions de référence : CPU au repos, RAM, espace disque, services et disponibilité.</li>
 </ul>
-<h3 id="phase-b-zabbix-de-la-collecte-au-diagnostic">Phase B — Zabbix, de la collecte au diagnostic</h3>
+<h3 id="phase-b-zabbix-de-la-collecte-au-diagnostic">Phase B : Zabbix, de la collecte au diagnostic</h3>
 <ul>
-<li>— À réaliser : Installer Zabbix sur MON01 avec serveur, frontend et base de données selon la documentation officielle.</li>
-<li>— À réaliser : Créer des comptes nominatifs, sécuriser l'interface et changer les secrets par défaut.</li>
-<li>— À réaliser : Ajouter WIN-TARGET01 avec l'agent Zabbix adapté et LINUX-TARGET01 avec l'agent correspondant.</li>
-<li>— À réaliser : Vérifier les données reçues, l'horodatage, le statut des agents et la disponibilité des hôtes.</li>
-<li>— À réaliser : Organiser les hôtes par groupes et appliquer des templates appropriés.</li>
-<li>— À réaliser : Superviser disponibilité, CPU, RAM, espace disque, services Windows et services Linux.</li>
-<li>— À réaliser : Configurer des triggers avec seuils et durées justifiés ; éviter les alertes trop sensibles ou redondantes.</li>
-<li>— À réaliser : Créer un tableau de bord opérationnel : disponibilité, problèmes actifs, ressources et services critiques.</li>
-<li>— À réaliser : Configurer l'e-mail ou un canal de notification accessible, puis prouver la réception.</li>
-<li>— À réaliser : Simuler séparément : arrêt d'un service, hôte injoignable, disque de test presque plein et agent arrêté.</li>
-<li>— À réaliser : Mesurer délai de détection, délai de notification et délai de retour à la normale.</li>
-<li>— À réaliser : Distinguer incident, problème persistant et simple alerte de capacité.</li>
+<li>: À réaliser : Installer Zabbix sur MON01 avec serveur, frontend et base de données selon la documentation officielle.</li>
+<li>: À réaliser : Créer des comptes nominatifs, sécuriser l'interface et changer les secrets par défaut.</li>
+<li>: À réaliser : Ajouter WIN-TARGET01 avec l'agent Zabbix adapté et LINUX-TARGET01 avec l'agent correspondant.</li>
+<li>: À réaliser : Vérifier les données reçues, l'horodatage, le statut des agents et la disponibilité des hôtes.</li>
+<li>: À réaliser : Organiser les hôtes par groupes et appliquer des templates appropriés.</li>
+<li>: À réaliser : Superviser disponibilité, CPU, RAM, espace disque, services Windows et services Linux.</li>
+<li>: À réaliser : Configurer des triggers avec seuils et durées justifiés ; éviter les alertes trop sensibles ou redondantes.</li>
+<li>: À réaliser : Créer un tableau de bord opérationnel : disponibilité, problèmes actifs, ressources et services critiques.</li>
+<li>: À réaliser : Configurer l'e-mail ou un canal de notification accessible, puis prouver la réception.</li>
+<li>: À réaliser : Simuler séparément : arrêt d'un service, hôte injoignable, disque de test presque plein et agent arrêté.</li>
+<li>: À réaliser : Mesurer délai de détection, délai de notification et délai de retour à la normale.</li>
+<li>: À réaliser : Distinguer incident, problème persistant et simple alerte de capacité.</li>
 </ul>
-<h3 id="phase-c-glpi-de-linventaire-a-la-cloture">Phase C — GLPI, de l'inventaire à la clôture</h3>
+<h3 id="phase-c-glpi-de-linventaire-a-la-cloture">Phase C : GLPI, de l'inventaire à la clôture</h3>
 <ul>
-<li>— À réaliser : Installer GLPI sur MON01 et documenter la version, le serveur Web, PHP, la base et les sauvegardes de configuration.</li>
-<li>— À réaliser : Configurer les entités, catégories, profils, techniciens et droits minimaux.</li>
-<li>— À réaliser : Définir une matrice de priorité basée sur impact et urgence.</li>
-<li>— À réaliser : Enregistrer les actifs de test et vérifier les informations d'inventaire pertinentes.</li>
-<li>— À réaliser : Créer des modèles de tickets : indisponibilité serveur, service arrêté, capacité disque et job de sauvegarde en échec.</li>
-<li>— À réaliser : Définir les étapes du cycle de vie : nouveau, qualification, assignation, diagnostic, résolution, validation et clôture.</li>
-<li>— À réaliser : Traiter d'abord une alerte Zabbix par ticket manuel pour valider le processus.</li>
-<li>— À réaliser : Mettre ensuite en place l'intégration Zabbix → GLPI via API/webhook/connecteur compatible.</li>
-<li>— À réaliser : Tester la déduplication, l'association de l'hôte, la sévérité, l'horodatage, la mise à jour et la clôture du ticket.</li>
-<li>— À réaliser : Documenter une fiche de résolution et une action préventive pour chaque incident représentatif.</li>
+<li>: À réaliser : Installer GLPI sur MON01 et documenter la version, le serveur Web, PHP, la base et les sauvegardes de configuration.</li>
+<li>: À réaliser : Configurer les entités, catégories, profils, techniciens et droits minimaux.</li>
+<li>: À réaliser : Définir une matrice de priorité basée sur impact et urgence.</li>
+<li>: À réaliser : Enregistrer les actifs de test et vérifier les informations d'inventaire pertinentes.</li>
+<li>: À réaliser : Créer des modèles de tickets : indisponibilité serveur, service arrêté, capacité disque et job de sauvegarde en échec.</li>
+<li>: À réaliser : Définir les étapes du cycle de vie : nouveau, qualification, assignation, diagnostic, résolution, validation et clôture.</li>
+<li>: À réaliser : Traiter d'abord une alerte Zabbix par ticket manuel pour valider le processus.</li>
+<li>: À réaliser : Mettre ensuite en place l'intégration Zabbix → GLPI via API/webhook/connecteur compatible.</li>
+<li>: À réaliser : Tester la déduplication, l'association de l'hôte, la sévérité, l'horodatage, la mise à jour et la clôture du ticket.</li>
+<li>: À réaliser : Documenter une fiche de résolution et une action préventive pour chaque incident représentatif.</li>
 </ul>
-<h3 id="phase-d-veeam-installation-et-protection">Phase D — Veeam : installation et protection</h3>
+<h3 id="phase-d-veeam-installation-et-protection">Phase D : Veeam : installation et protection</h3>
 <ul>
-<li>— À réaliser : Confirmer la version de Veeam, les systèmes invités pris en charge, les prérequis CPU/RAM et le mode de licence.</li>
-<li>— À réaliser : Installer VBR01 sur Windows Server invité ; documenter la base de configuration, les composants installés et les journaux.</li>
-<li>— À réaliser : Utiliser le TrueNAS comme dépôt SMB dédié, créer un compte de service limité et valider lecture/écriture depuis VBR01.</li>
-<li>— À réaliser : Ajouter le dépôt dans Veeam, vérifier l'espace libre, les permissions et la connectivité.</li>
-<li>— À réaliser : Installer/activer Veeam Agent sur WIN-TARGET01 et LINUX-TARGET01 selon les scénarios retenus ; gérer les agents depuis Veeam si le mode et la licence le permettent.</li>
-<li>— À réaliser : Créer un job de sauvegarde Windows et un job Linux/données, avec planification, rétention et exclusions documentées.</li>
-<li>— À réaliser : Exécuter les jobs et conserver les journaux de résultat ; vérifier qu'aucun job n'est seulement configuré sans avoir été exécuté.</li>
-<li>— À réaliser : Simuler un échec de job (par exemple, dépôt temporairement indisponible dans un test contrôlé), analyser le message, corriger et relancer.</li>
-<li>— À réaliser : Configurer une alerte exploitable sur l'échec de sauvegarde, via les mécanismes disponibles et compatibles avec la version.</li>
-<li>— À réaliser : Documenter la distinction entre sauvegarde du système invité par agent, sauvegarde d'une VM via un hyperviseur pris en charge et simple copie de fichier.</li>
-<li>— À réaliser : Ne pas affirmer que les VM VMware Workstation sont protégées par une intégration native d'hyperviseur ; le périmètre initial est la protection basée sur agents.</li>
+<li>: À réaliser : Confirmer la version de Veeam, les systèmes invités pris en charge, les prérequis CPU/RAM et le mode de licence.</li>
+<li>: À réaliser : Installer VBR01 sur Windows Server invité ; documenter la base de configuration, les composants installés et les journaux.</li>
+<li>: À réaliser : Utiliser le TrueNAS comme dépôt SMB dédié, créer un compte de service limité et valider lecture/écriture depuis VBR01.</li>
+<li>: À réaliser : Ajouter le dépôt dans Veeam, vérifier l'espace libre, les permissions et la connectivité.</li>
+<li>: À réaliser : Installer/activer Veeam Agent sur WIN-TARGET01 et LINUX-TARGET01 selon les scénarios retenus ; gérer les agents depuis Veeam si le mode et la licence le permettent.</li>
+<li>: À réaliser : Créer un job de sauvegarde Windows et un job Linux/données, avec planification, rétention et exclusions documentées.</li>
+<li>: À réaliser : Exécuter les jobs et conserver les journaux de résultat ; vérifier qu'aucun job n'est seulement configuré sans avoir été exécuté.</li>
+<li>: À réaliser : Simuler un échec de job (par exemple, dépôt temporairement indisponible dans un test contrôlé), analyser le message, corriger et relancer.</li>
+<li>: À réaliser : Configurer une alerte exploitable sur l'échec de sauvegarde, via les mécanismes disponibles et compatibles avec la version.</li>
+<li>: À réaliser : Documenter la distinction entre sauvegarde du système invité par agent, sauvegarde d'une VM via un hyperviseur pris en charge et simple copie de fichier.</li>
+<li>: À réaliser : Ne pas affirmer que les VM VMware Workstation sont protégées par une intégration native d'hyperviseur ; le périmètre initial est la protection basée sur agents.</li>
 </ul>
-<h3 id="phase-e-restaurations-et-preuve-de-recuperabilite">Phase E — Restaurations et preuve de récupérabilité</h3>
+<h3 id="phase-e-restaurations-et-preuve-de-recuperabilite">Phase E : Restaurations et preuve de récupérabilité</h3>
 <ul>
-<li>— À réaliser : Restaurer un fichier supprimé dans un emplacement alternatif et comparer son contenu.</li>
-<li>— À réaliser : Restaurer un dossier contenant un jeu de données de test et vérifier nombre de fichiers, tailles et intégrité.</li>
-<li>— À réaliser : Effectuer une récupération plus complète selon la méthode supportée (volume, système ou machine de test) sans écraser le système de travail.</li>
-<li>— À réaliser : Consigner le point de restauration choisi, les étapes, les erreurs, le temps de récupération et le résultat.</li>
-<li>— À réaliser : Vérifier les données après restauration depuis l'application ou l'outil approprié ; le statut de réussite du job ne remplace pas cette vérification.</li>
-<li>— À réaliser : Tester l'accès à une copie indépendante sur TrueNAS et, si disponible, une seconde copie hors ligne.</li>
-<li>— À réaliser : Définir et mesurer des objectifs de laboratoire RPO/RTO : perte de données acceptable et durée de récupération observée.</li>
-<li>— À réaliser : Enregistrer les limites : dépôt sur le même hôte physique, capacité de stockage, licence, sauvegarde d'agent et périmètre non couvert.</li>
+<li>: À réaliser : Restaurer un fichier supprimé dans un emplacement alternatif et comparer son contenu.</li>
+<li>: À réaliser : Restaurer un dossier contenant un jeu de données de test et vérifier nombre de fichiers, tailles et intégrité.</li>
+<li>: À réaliser : Effectuer une récupération plus complète selon la méthode supportée (volume, système ou machine de test) sans écraser le système de travail.</li>
+<li>: À réaliser : Consigner le point de restauration choisi, les étapes, les erreurs, le temps de récupération et le résultat.</li>
+<li>: À réaliser : Vérifier les données après restauration depuis l'application ou l'outil approprié ; le statut de réussite du job ne remplace pas cette vérification.</li>
+<li>: À réaliser : Tester l'accès à une copie indépendante sur TrueNAS et, si disponible, une seconde copie hors ligne.</li>
+<li>: À réaliser : Définir et mesurer des objectifs de laboratoire RPO/RTO : perte de données acceptable et durée de récupération observée.</li>
+<li>: À réaliser : Enregistrer les limites : dépôt sur le même hôte physique, capacité de stockage, licence, sauvegarde d'agent et périmètre non couvert.</li>
 </ul>
-<h3 id="phase-f-scenario-integre-zabbix-glpi-veeam">Phase F — Scénario intégré Zabbix + GLPI + Veeam</h3>
+<h3 id="phase-f-scenario-integre-zabbix-glpi-veeam">Phase F : Scénario intégré Zabbix + GLPI + Veeam</h3>
 <ul>
-<li>— À réaliser : Définir un scénario reproductible : par exemple, job Veeam en échec ou service critique arrêté.</li>
-<li>— À réaliser : Vérifier que Zabbix détecte l'anomalie et génère une alerte exploitable.</li>
-<li>— À réaliser : Vérifier la notification et la création/mise à jour du ticket GLPI.</li>
-<li>— À réaliser : Assigner l'incident, diagnostiquer la cause, appliquer la correction et consigner la preuve.</li>
-<li>— À réaliser : Relancer le job ou rétablir le service, puis vérifier le retour à la normale.</li>
-<li>— À réaliser : Clôturer le ticket avec cause, résolution, durée et action préventive.</li>
-<li>— À réaliser : Mesurer le temps de détection, de notification, de prise en charge, de résolution et, le cas échéant, de restauration.</li>
-<li>— À réaliser : Rejouer le scénario après amélioration et comparer les résultats.</li>
+<li>: À réaliser : Définir un scénario reproductible : par exemple, job Veeam en échec ou service critique arrêté.</li>
+<li>: À réaliser : Vérifier que Zabbix détecte l'anomalie et génère une alerte exploitable.</li>
+<li>: À réaliser : Vérifier la notification et la création/mise à jour du ticket GLPI.</li>
+<li>: À réaliser : Assigner l'incident, diagnostiquer la cause, appliquer la correction et consigner la preuve.</li>
+<li>: À réaliser : Relancer le job ou rétablir le service, puis vérifier le retour à la normale.</li>
+<li>: À réaliser : Clôturer le ticket avec cause, résolution, durée et action préventive.</li>
+<li>: À réaliser : Mesurer le temps de détection, de notification, de prise en charge, de résolution et, le cas échéant, de restauration.</li>
+<li>: À réaliser : Rejouer le scénario après amélioration et comparer les résultats.</li>
 </ul>
 <p><strong>Livrable :</strong> matrice de tests avec résultat attendu, résultat observé, date, preuve, verdict et anomalie ouverte.</p>
 <h2 id="5-incidents-problemes-et-erreurs-de-sauvegarde">5. Incidents, problèmes et erreurs de sauvegarde</h2>
 <ul>
-<li>— À réaliser : Consigner chaque incident avec heure, impact, symptômes, hôtes concernés et changement récent.</li>
-<li>— À réaliser : Collecter les journaux Zabbix, Windows/Linux, GLPI et Veeam utiles.</li>
-<li>— À réaliser : Pour Veeam, vérifier en priorité le message exact du job, la disponibilité du dépôt, l'espace libre, les permissions, la connectivité et l'état de l'agent.</li>
-<li>— À réaliser : Pour Zabbix, vérifier agent/port, DNS, réseau, droits, template, trigger et durée de collecte.</li>
-<li>— À réaliser : Pour GLPI, vérifier droits, catégorie, notification et intégration API/webhook.</li>
-<li>— À réaliser : Séparer contournement temporaire et cause racine démontrée.</li>
-<li>— À réaliser : Ouvrir ou mettre à jour un ticket GLPI et documenter la résolution.</li>
-<li>— À réaliser : Créer une action préventive si l'incident révèle un seuil manquant, une dépendance non documentée, une capacité insuffisante ou une procédure de restauration incomplète.</li>
-<li>— À réaliser : Ne jamais effacer un journal ou une preuve nécessaire avant la fin de l'analyse.</li>
+<li>: À réaliser : Consigner chaque incident avec heure, impact, symptômes, hôtes concernés et changement récent.</li>
+<li>: À réaliser : Collecter les journaux Zabbix, Windows/Linux, GLPI et Veeam utiles.</li>
+<li>: À réaliser : Pour Veeam, vérifier en priorité le message exact du job, la disponibilité du dépôt, l'espace libre, les permissions, la connectivité et l'état de l'agent.</li>
+<li>: À réaliser : Pour Zabbix, vérifier agent/port, DNS, réseau, droits, template, trigger et durée de collecte.</li>
+<li>: À réaliser : Pour GLPI, vérifier droits, catégorie, notification et intégration API/webhook.</li>
+<li>: À réaliser : Séparer contournement temporaire et cause racine démontrée.</li>
+<li>: À réaliser : Ouvrir ou mettre à jour un ticket GLPI et documenter la résolution.</li>
+<li>: À réaliser : Créer une action préventive si l'incident révèle un seuil manquant, une dépendance non documentée, une capacité insuffisante ou une procédure de restauration incomplète.</li>
+<li>: À réaliser : Ne jamais effacer un journal ou une preuve nécessaire avant la fin de l'analyse.</li>
 </ul>
 <p><strong>Livrable :</strong> au moins trois rapports d'incident documentés, dont un lié à une sauvegarde/restauration.</p>
 <h2 id="6-mise-en-service-du-laboratoire-et-dossier-dexploitation">6. Mise en service du laboratoire et dossier d'exploitation</h2>
 <ul>
-<li>— À réaliser : Mettre à jour le schéma, l'inventaire, les IP, les versions et les dépendances.</li>
-<li>— À réaliser : Rédiger une procédure de contrôle quotidien/hebdomadaire de Zabbix, GLPI et Veeam.</li>
-<li>— À réaliser : Documenter les seuils, les notifications, les jobs, la rétention et les emplacements de sauvegarde.</li>
-<li>— À réaliser : Rédiger une procédure de restauration de fichier et une procédure de récupération plus complète testée.</li>
-<li>— À réaliser : Documenter les comptes de service et les droits sans publier les secrets.</li>
-<li>— À réaliser : Faire correspondre chaque critère d'acceptation à une preuve datée.</li>
-<li>— À réaliser : Vérifier que le laboratoire peut être redémarré après arrêt des PC et que les services reviennent dans l'ordre attendu.</li>
-<li>— À réaliser : Publier uniquement des captures anonymisées : noms fictifs, IP de laboratoire, aucun mot de passe, jeton API ou adresse personnelle.</li>
-<li>— À réaliser : Décrire clairement ce qui est testé, ce qui est seulement configuré et ce qui reste hors périmètre.</li>
+<li>: À réaliser : Mettre à jour le schéma, l'inventaire, les IP, les versions et les dépendances.</li>
+<li>: À réaliser : Rédiger une procédure de contrôle quotidien/hebdomadaire de Zabbix, GLPI et Veeam.</li>
+<li>: À réaliser : Documenter les seuils, les notifications, les jobs, la rétention et les emplacements de sauvegarde.</li>
+<li>: À réaliser : Rédiger une procédure de restauration de fichier et une procédure de récupération plus complète testée.</li>
+<li>: À réaliser : Documenter les comptes de service et les droits sans publier les secrets.</li>
+<li>: À réaliser : Faire correspondre chaque critère d'acceptation à une preuve datée.</li>
+<li>: À réaliser : Vérifier que le laboratoire peut être redémarré après arrêt des PC et que les services reviennent dans l'ordre attendu.</li>
+<li>: À réaliser : Publier uniquement des captures anonymisées : noms fictifs, IP de laboratoire, aucun mot de passe, jeton API ou adresse personnelle.</li>
+<li>: À réaliser : Décrire clairement ce qui est testé, ce qui est seulement configuré et ce qui reste hors périmètre.</li>
 </ul>
 <p><strong>Livrable :</strong> dossier d'exploitation, procédures de dépannage et de restauration, schémas et preuves.</p>
 <h2 id="7-amelioration-continue">7. Amélioration continue</h2>
 <ul>
-<li>— À réaliser : Analyser les faux positifs et ajuster les triggers à partir de mesures observées.</li>
-<li>— À réaliser : Revoir la rétention Zabbix et la croissance de la base.</li>
-<li>— À réaliser : Revoir l'espace libre, la durée des jobs, le taux d'échec et la capacité du dépôt Veeam.</li>
-<li>— À réaliser : Tester périodiquement la restauration plutôt que de se fier uniquement aux rapports de sauvegarde.</li>
-<li>— À réaliser : Mesurer les délais de détection et de résolution sur plusieurs scénarios.</li>
-<li>— À réaliser : Identifier les alertes utiles à automatiser et les situations nécessitant une validation humaine.</li>
-<li>— À réaliser : Lister les limites et prioriser trois améliorations selon le risque réduit et l'effort.</li>
-<li>— À réaliser : Préparer une démonstration de 10–15 minutes : panne, alerte, ticket, diagnostic, sauvegarde/restauration et retour d'expérience.</li>
+<li>: À réaliser : Analyser les faux positifs et ajuster les triggers à partir de mesures observées.</li>
+<li>: À réaliser : Revoir la rétention Zabbix et la croissance de la base.</li>
+<li>: À réaliser : Revoir l'espace libre, la durée des jobs, le taux d'échec et la capacité du dépôt Veeam.</li>
+<li>: À réaliser : Tester périodiquement la restauration plutôt que de se fier uniquement aux rapports de sauvegarde.</li>
+<li>: À réaliser : Mesurer les délais de détection et de résolution sur plusieurs scénarios.</li>
+<li>: À réaliser : Identifier les alertes utiles à automatiser et les situations nécessitant une validation humaine.</li>
+<li>: À réaliser : Lister les limites et prioriser trois améliorations selon le risque réduit et l'effort.</li>
+<li>: À réaliser : Préparer une démonstration de 10–15 minutes : panne, alerte, ticket, diagnostic, sauvegarde/restauration et retour d'expérience.</li>
 </ul>
 <h2 id="registre-initial-des-risques">Registre initial des risques</h2>
 <table>
@@ -508,7 +508,7 @@ TrueNAS — cible de sauvegarde distincte
 <li>Installation Veeam, dépôt, jobs Windows/Linux et alertes d'échec.</li>
 <li>Restaurations contrôlées, scénario intégré, mesures, documentation et revue du projet.</li>
 </ol>
-<p><strong>Prochaine action immédiate :</strong> relever les IP et l'espace libre exact sur les deux PC, vérifier le réseau VMware et TrueNAS, puis créer WIN-TARGET01, MON01 (Zabbix + GLPI) et LINUX-TARGET01 par étapes. VBR01 sera ajouté après validation de Zabbix/GLPI ; TrueNAS servira de dépôt SMB.</p><h1>Pilotage du projet — bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées valident uniquement les travaux de cadrage et de conception effectivement documentés. Elles ne signifient pas que le laboratoire technique est déployé. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> architecture cible, contraintes matérielles, répartition des ressources, rôles des outils et parcours d’implémentation documentés ; déploiement intégré restant à faire</p></blockquote><h2>1. Cadrage et architecture</h2><ul><li>☑ L’objectif intégré Zabbix, GLPI et Veeam est défini.</li><li>☑ Les contraintes matérielles des deux PC Windows 11 Pro et du TrueNAS sont prises en compte.</li><li>☑ La répartition des rôles entre supervision, gestion des tickets, systèmes cibles et sauvegarde est documentée.</li><li>☑ Les critères d’acceptation globaux et preuves finales attendues sont définis.</li></ul><h2>2. Conception technique</h2><ul><li>☑ L’architecture cible et les VM envisagées sont décrites.</li><li>☑ Les budgets CPU, RAM et stockage tiennent compte des limites réelles.</li><li>☑ Le rôle du TrueNAS comme dépôt SMB dédié est défini.</li><li>☑ Les réseaux VMware et flux entre composants sont planifiés.</li><li>☑ Le parcours Zabbix vers GLPI et les étapes Veeam/restauration sont ordonnés.</li><li>☑ Les précautions de sécurité, comptes dédiés, secrets et limites de stockage sont documentées.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Créer les VM du socle et vérifier la connectivité.</li><li>Installer et configurer Zabbix, puis superviser les cibles Windows et Linux.</li><li>Créer et traiter des tickets GLPI à partir d’incidents réels.</li><li>Automatiser et prouver la création/mise à jour des tickets depuis Zabbix.</li><li>Installer Veeam, configurer le dépôt TrueNAS et exécuter les jobs.</li><li>Exécuter et vérifier les restaurations fichier, données et système.</li><li>Réaliser le scénario intégré détection, ticketing, sauvegarde et reprise.</li><li>Ajouter captures, journaux, temps mesurés et matrice de tests datée.</li></ul><p><strong>Bilan :</strong> la préparation documentaire est réalisée ; la mise en œuvre technique reste à effectuer. Le statut du projet n’est pas augmenté par les seules cases de planification.</p>
+<p><strong>Prochaine action immédiate :</strong> relever les IP et l'espace libre exact sur les deux PC, vérifier le réseau VMware et TrueNAS, puis créer WIN-TARGET01, MON01 (Zabbix + GLPI) et LINUX-TARGET01 par étapes. VBR01 sera ajouté après validation de Zabbix/GLPI ; TrueNAS servira de dépôt SMB.</p><h1>Pilotage du projet : bilan ITIL 4 fondé sur les réalisations</h1><blockquote><p><strong>Règle de lecture :</strong> les cases cochées valident uniquement les travaux de cadrage et de conception effectivement documentés. Elles ne signifient pas que le laboratoire technique est déployé. Démarche inspirée d’ITIL 4, sans revendiquer certification ou conformité formelle.</p><p><strong>Périmètre évalué :</strong> architecture cible, contraintes matérielles, répartition des ressources, rôles des outils et parcours d’implémentation documentés ; déploiement intégré restant à faire</p></blockquote><h2>1. Cadrage et architecture</h2><ul><li>☑ L’objectif intégré Zabbix, GLPI et Veeam est défini.</li><li>☑ Les contraintes matérielles des deux PC Windows 11 Pro et du TrueNAS sont prises en compte.</li><li>☑ La répartition des rôles entre supervision, gestion des tickets, systèmes cibles et sauvegarde est documentée.</li><li>☑ Les critères d’acceptation globaux et preuves finales attendues sont définis.</li></ul><h2>2. Conception technique</h2><ul><li>☑ L’architecture cible et les VM envisagées sont décrites.</li><li>☑ Les budgets CPU, RAM et stockage tiennent compte des limites réelles.</li><li>☑ Le rôle du TrueNAS comme dépôt SMB dédié est défini.</li><li>☑ Les réseaux VMware et flux entre composants sont planifiés.</li><li>☑ Le parcours Zabbix vers GLPI et les étapes Veeam/restauration sont ordonnés.</li><li>☑ Les précautions de sécurité, comptes dédiés, secrets et limites de stockage sont documentées.</li></ul><h2>Améliorations futures et validations restantes</h2><ul><li>Créer les VM du socle et vérifier la connectivité.</li><li>Installer et configurer Zabbix, puis superviser les cibles Windows et Linux.</li><li>Créer et traiter des tickets GLPI à partir d’incidents réels.</li><li>Automatiser et prouver la création/mise à jour des tickets depuis Zabbix.</li><li>Installer Veeam, configurer le dépôt TrueNAS et exécuter les jobs.</li><li>Exécuter et vérifier les restaurations fichier, données et système.</li><li>Réaliser le scénario intégré détection, ticketing, sauvegarde et reprise.</li><li>Ajouter captures, journaux, temps mesurés et matrice de tests datée.</li></ul><p><strong>Bilan :</strong> la préparation documentaire est réalisée ; la mise en œuvre technique reste à effectuer. Le statut du projet n’est pas augmenté par les seules cases de planification.</p>
 </main>
 <footer><div class="wrap">© 2026 Joris Allabi · Laboratoires personnels et de simulation, sauf indication contraire.</div></footer>
 <script src="assets/portfolio.js" defer></script>
