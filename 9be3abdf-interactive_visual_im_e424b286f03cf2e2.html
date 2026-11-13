@@ -4,7 +4,7 @@
 <style id="lumi-runtime">
 /* luminous.css */
 /*
- * Luminous runtime stylesheet — injected once into every generated widget's
+ * Luminous runtime stylesheet : injected once into every generated widget's
  * <head> by the C++ widget agent (id="lumi-runtime"). Single Source of Truth
  * for ALL design tokens and pre-baked .lumi-* component classes. The SI prompts
  * (design.md / html_generation.jinja2 / chart.jinja2) must NOT re-declare these
@@ -13,7 +13,7 @@
  * Sections:
  *   1. Web fonts (Google Sans Flex + Google Sans Code)
  *   2. Light token :root (from previewer tokens.css, verbatim)
- *   3. Dark token overrides — REMAPPED to :root so canvas/D3 readers of
+ *   3. Dark token overrides : REMAPPED to :root so canvas/D3 readers of
  *      getComputedStyle(document.documentElement) resolve dark values (D3).
  *   4. Short diagram/chart aliases (bridge legacy --surface / --chart-N names).
  *   5. In-scope pre-baked .lumi-* component classes.
@@ -120,7 +120,7 @@
 }
 
 /* ============================================================
- * 3. DARK TOKENS  (REMAPPED to :root — Decision D3)
+ * 3. DARK TOKENS  (REMAPPED to :root : Decision D3)
  *    Canvas / Chart.js / D3 read getComputedStyle(document.documentElement);
  *    the theme-sync listener sets data-theme="dark" on <html>, so dark values
  *    MUST live on :root (not scoped to body) to prevent black-chart regressions.
@@ -257,7 +257,7 @@ body.dark-mode,
  *    Legacy diagram.md and chart.jinja2 reference short names such as
  *    --surface, --on-surface, --chart-1..10, --primary, --r-full. These MUST
  *    resolve to the canonical --lumi-sys-color--* tokens (which flip in dark
- *    mode) — otherwise every diagram var() falls back to black (historical
+ *    mode) : otherwise every diagram var() falls back to black (historical
  *    mass-regression bug #4). Light-hex fallbacks are a last resort only.
  * ============================================================ */
 :root {
@@ -375,7 +375,7 @@ html, body {
 }
 
 /* --- Buttons --- */
-/* Universal button fallback (element specificity 0,0,1) — beats `* { padding: 0 }`
+/* Universal button fallback (element specificity 0,0,1) : beats `* { padding: 0 }`
    author resets (0,0,0) while still yielding to any author class selector (0,1,0). */
 button {
   appearance: none;
@@ -730,7 +730,7 @@ select.lumi-select:focus-visible {
 }
 
 /* ============================================================
- * DIAGRAM GUARD — SVG <text> is fill-only.
+ * DIAGRAM GUARD : SVG <text> is fill-only.
  *   An inherited group stroke (e.g. `.node:hover { stroke }` on a <g>)
  *   otherwise cascades into child <text>, thickening glyph outlines
  *   (fake-bold) and recoloring the label. Highlight strokes belong on
