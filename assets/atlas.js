@@ -5,7 +5,8 @@
 
   const closeButtons = dialog.querySelectorAll('[data-atlas-close]');
   const setOpenState = (isOpen) => {
-    document.body.dataset.atlasDialogOpen = String(isOpen);
+    if (isOpen) document.body.dataset.atlasDialogOpen = 'true';
+    else delete document.body.dataset.atlasDialogOpen;
     opener.setAttribute('aria-expanded', String(isOpen));
   };
 
@@ -47,6 +48,9 @@
   dialog.addEventListener('close', () => {
     setOpenState(false);
     opener.focus();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dialog.open && dialog.classList.contains('atlas-fallback')) close();
   });
 
   dialog.querySelectorAll('.atlas-modal-nav a').forEach((link) => {
