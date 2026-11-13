@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cisco CME — Architecture VoIP SCCP & SIP</title>
+<title>Cisco CME : Architecture VoIP SCCP & SIP</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Google+Sans+Code:wght@400;500;600&display=swap');
 
@@ -67,7 +67,7 @@ header{background:rgba(13,15,17,.88)}.node rect{fill:#15181c;stroke:#343b44}.nod
 <body>
 <header>
  <div class="header-inner">
-  <div><div class="eyebrow">Network Engineering / VoIP</div><h1>Cisco CME — Architecture VoIP</h1></div>
+  <div><div class="eyebrow">Network Engineering / VoIP</div><h1>Cisco CME : Architecture VoIP</h1></div>
   <div class="badge">SCCP + SIP · QoS</div>
  </div>
 </header>
@@ -109,7 +109,7 @@ header{background:rgba(13,15,17,.88)}.node rect{fill:#15181c;stroke:#343b44}.nod
  </g>
 
  <!-- Router -->
- <g class="node" data-title="Cisco 3725 — CME" data-body="IP LAN : 192.168.10.254/24\nDHCP : VOICE\nOption 150 : 192.168.10.254\nSCCP : telephony-service / TCP 2000\nSIP : registrar / UDP 5060\nCodec : G.711 u-law puis G.711 a-law">
+ <g class="node" data-title="Cisco 3725 : CME" data-body="IP LAN : 192.168.10.254/24\nDHCP : VOICE\nOption 150 : 192.168.10.254\nSCCP : telephony-service / TCP 2000\nSIP : registrar / UDP 5060\nCodec : G.711 u-law puis G.711 a-law">
   <rect x="420" y="150" width="360" height="220" rx="22"/>
   <text x="600" y="193" text-anchor="middle" class="node-title" style="font-size:21px">Cisco 3725</text>
   <text x="600" y="218" text-anchor="middle" class="node-sub">CallManager Express · VoIP Core</text>
@@ -137,7 +137,7 @@ header{background:rgba(13,15,17,.88)}.node rect{fill:#15181c;stroke:#343b44}.nod
  <text x="817" y="175" class="edge-label">SCCP / 2000</text>
 
  <!-- SIP cluster -->
- <g class="node" data-title="Terminaux SIP / Softphones" data-body="Registrar SIP : 192.168.10.254:5060\nDN SIP configurés : 1001 à 1005.\nDeux pools sont explicitement configurés dans la configuration fournie :\n1001 — MAC D453.83D3.45C8\n1002 — MAC E888.439A.CA06\nCodec : voice-class codec 1.">
+ <g class="node" data-title="Terminaux SIP / Softphones" data-body="Registrar SIP : 192.168.10.254:5060\nDN SIP configurés : 1001 à 1005.\nDeux pools sont explicitement configurés dans la configuration fournie :\n1001 : MAC D453.83D3.45C8\n1002 : MAC E888.439A.CA06\nCodec : voice-class codec 1.">
   <rect x="860" y="245" width="295" height="145" rx="18"/>
   <text x="1007" y="281" text-anchor="middle" class="node-title">Terminaux SIP</text>
   <text x="1007" y="305" text-anchor="middle" class="node-sub">voice register pool</text>
