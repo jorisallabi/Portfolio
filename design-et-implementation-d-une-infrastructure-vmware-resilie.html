@@ -8,7 +8,7 @@
 <header class="top"><div class="bar"><a class="brand" href="index.html">JORIS ALLABI <span class="micro">/ PORTFOLIO</span></a><nav aria-label="Navigation principale"><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
 <h1>Cluster VMware et stockage iSCSI</h1>
-<div class="meta"><span class="badge ok">Livré</span><span class="chip">Avancement 100%</span><span class="chip">Laboratoire VMware vSphere 7.0 (ESXi, vCenter, TrueNAS)</span></div>
+<div class="meta"><span class="badge ok">Livré</span><span class="chip">Avancement 100%</span><span class="chip">Laboratoire VMware vSphere 7.0 (ESXi, vCenter, TrueNAS)</span></div><p class="project-video-link"><b>Confidentialité :</b> les adresses IPv4 de cette fiche sont remplacées par des plages de documentation (RFC 5737). Les captures d’écran doivent encore être contrôlées et, si nécessaire, remplacées avant publication.</p>
 <section class="project-overview" aria-labelledby="project-overview-title"><h2 id="project-overview-title">En bref</h2><p><span class="project-status">Livré</span></p><dl class="project-facts"><div><dt>Contexte</dt><dd>Laboratoire VMware en virtualisation imbriquée</dd></div><div><dt>Mon rôle</dt><dd>Mise en place de l'environnement vSphere et validation HA/DRS</dd></div><div><dt>Environnement</dt><dd>VMware ESXi · vCenter · TrueNAS · iSCSI</dd></div><div><dt>Hyperviseurs</dt><dd>3 hôtes ESXi</dd></div><div><dt>Administration</dt><dd>vCenter Server</dd></div><div><dt>Stockage</dt><dd>Partage iSCSI</dd></div><div><dt>Validation</dt><dd>Migration vMotion et redémarrage HA démontrés</dd></div></dl></section>
 <h2 id="problematique">Problématique</h2>
 <table>
@@ -91,7 +91,7 @@
 <tbody>
 <tr>
 <td><code>esxi1.labo.local</code></td>
-<td><code>192.168.100.100</code></td>
+<td><code>192.0.2.100</code></td>
 <td>PC de bureau, i5-12400F</td>
 <td>16 Go</td>
 <td>850,33 Go (4 banques de données)</td>
@@ -99,7 +99,7 @@
 </tr>
 <tr>
 <td><code>esxi2.labo.local</code></td>
-<td><code>192.168.100.94</code></td>
+<td><code>192.0.2.94</code></td>
 <td>PC portable, i7-9850H</td>
 <td>8 Go</td>
 <td>270,58 Go (2 banques de données)</td>
@@ -107,7 +107,7 @@
 </tr>
 <tr>
 <td><code>esxi3.labo.local</code></td>
-<td><code>192.168.100.103</code></td>
+<td><code>192.0.2.103</code></td>
 <td>PC portable, i7-9850H</td>
 <td>8 Go</td>
 <td>204,58 Go (2 banques de données)</td>
@@ -129,19 +129,19 @@
 <tr>
 <td>vCenter Server Appliance (Photon OS)</td>
 <td><code>vcenter.labo.local</code></td>
-<td><code>192.168.100.200</code></td>
+<td><code>192.0.2.200</code></td>
 <td>VM sur <code>esxi1</code></td>
 </tr>
 <tr>
 <td>DNS Technitium (enregistrements A/PTR de <code>labo.local</code>)</td>
 <td>n/a</td>
-<td><code>192.168.100.6</code></td>
+<td><code>192.0.2.6</code></td>
 <td>PC portable</td>
 </tr>
 <tr>
 <td>NAS TrueNAS (cible iSCSI)</td>
 <td>n/a</td>
-<td><code>192.168.100.115</code></td>
+<td><code>192.0.2.115</code></td>
 <td>n/a</td>
 </tr>
 </tbody>
@@ -186,28 +186,28 @@
 </tr>
 <tr>
 <td><code>Management Network</code> (<code>vmk0</code>)</td>
-<td><code>192.168.100.94</code></td>
-<td><code>192.168.100.103</code></td>
+<td><code>192.0.2.94</code></td>
+<td><code>192.0.2.103</code></td>
 </tr>
 <tr>
 <td><code>VMkernel_NFS</code></td>
-<td><code>vmk1</code> : <code>192.168.100.198</code></td>
-<td><code>vmk2</code> : <code>192.168.100.106</code></td>
+<td><code>vmk1</code> : <code>192.0.2.198</code></td>
+<td><code>vmk2</code> : <code>192.0.2.106</code></td>
 </tr>
 <tr>
 <td><code>VMkernel_iSCSI</code></td>
-<td><code>vmk2</code> : <code>192.168.100.191</code></td>
-<td><code>vmk3</code> : <code>192.168.100.107</code></td>
+<td><code>vmk2</code> : <code>192.0.2.191</code></td>
+<td><code>vmk3</code> : <code>192.0.2.107</code></td>
 </tr>
 <tr>
 <td><code>VMkernel_vmotion</code></td>
-<td><code>vmk3</code> : <code>192.168.100.199</code></td>
-<td><code>vmk1</code> : <code>192.168.100.105</code></td>
+<td><code>vmk3</code> : <code>192.0.2.199</code></td>
+<td><code>vmk1</code> : <code>192.0.2.105</code></td>
 </tr>
 <tr>
 <td><code>vSwitch1</code> : groupes de ports</td>
-<td><code>Réseau de gestion ESXi 2</code> (<code>vmk4</code> : <code>192.168.108.129</code>), <code>VM Network 2</code></td>
-<td><code>Réseau de Gestion Esxi3</code> (<code>vmk4</code> : <code>192.168.108.128</code>)</td>
+<td><code>Réseau de gestion ESXi 2</code> (<code>vmk4</code> : <code>198.51.100.129</code>), <code>VM Network 2</code></td>
+<td><code>Réseau de Gestion Esxi3</code> (<code>vmk4</code> : <code>198.51.100.128</code>)</td>
 </tr>
 <tr>
 <td><code>vSwitch1</code> : carte physique</td>
@@ -233,7 +233,7 @@
 <p><img loading="lazy" alt="esxi3 : commutateurs virtuels standards, groupes de ports et ports VMkernel" src="014b5b5b-image.png" /></p>
 <p>esxi3 : commutateurs virtuels standards, groupes de ports et ports VMkernel</p>
 <h2 id="stockage-partage-iscsi">Stockage partagé iSCSI</h2>
-<p>Le stockage partagé est fourni par un NAS <strong>TrueNAS</strong> (<code>192.168.100.115</code>) qui expose un partage iSCSI. Sur <code>esxi1</code>, l'adaptateur iSCSI est configuré avec l'adresse IP du NAS, puis l'hôte reconnaît le partage et s'y attache (captures ci-dessous). Les hôtes disposent chacun d'une interface VMkernel dédiée à l'iSCSI (voir la section réseau virtuel).</p>
+<p>Le stockage partagé est fourni par un NAS <strong>TrueNAS</strong> (<code>192.0.2.115</code>) qui expose un partage iSCSI. Sur <code>esxi1</code>, l'adaptateur iSCSI est configuré avec l'adresse IP du NAS, puis l'hôte reconnaît le partage et s'y attache (captures ci-dessous). Les hôtes disposent chacun d'une interface VMkernel dédiée à l'iSCSI (voir la section réseau virtuel).</p>
 <p><img loading="lazy" alt="Vue des banques de données dans vCenter, classées par type de stockage (VMFS, NFS, vSAN)" src="ac6194ed-image.png" /></p>
 <p>Vue des banques de données dans vCenter, classées par type de stockage (VMFS, NFS, vSAN)</p>
 <p><img loading="lazy" alt="Interface TrueNAS : partage iSCSI configuré" src="54afe9dc-image.png" /></p>
