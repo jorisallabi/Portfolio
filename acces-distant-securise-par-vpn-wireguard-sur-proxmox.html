@@ -160,7 +160,7 @@ wg show</code></pre>
 
 <h3>3.4 Redirection de port sur le routeur</h3>
 <p>Une règle de redirection envoie le port <code>UDP 51820</code> du routeur vers <code>192.0.2.62</code>. Le routeur n'a pas de champ « protocole » dans le premier formulaire : il apparaît dans un second bloc, qui doit être réglé sur <code>UDP</code>, avec les deux cases de chaque plage de ports renseignées (<code>51820</code> à <code>51820</code>). L'adresse physique de l'hôte, visible sur la capture d'origine, est masquée.</p>
-<figure><img loading="lazy" src="assets/wireguard-redirection-port-routeur.png" alt="Formulaire de redirection de port du routeur : nom VPN_WIREGUARD, hôte interne 192.0.2.62, protocole UDP, port interne et externe 51820"><figcaption>Règle de redirection <code>UDP 51820</code> vers l'hôte Proxmox. Capture prise pendant la saisie, avant la validation par « Add » et « Apply » ; la seconde case de chaque plage a été complétée ensuite.</figcaption></figure>
+<p class="project-video-link">Capture de redirection masquée : la règle <code>UDP 51820</code> est documentée sans exposer l’adresse interne du serveur.</p>
 <p>Avant de configurer cette redirection, j'ai vérifié que le routeur n'est pas derrière un CGNAT : l'adresse WAN affichée par le routeur est identique à celle qu'un service externe me renvoie. Si elles avaient différé, aucune redirection de port n'aurait fonctionné depuis l'extérieur.</p>
 
 <h3>3.5 DNS dynamique (DuckDNS)</h3>
@@ -225,7 +225,7 @@ peer: &lt;clé publique du téléphone&gt;
   allowed ips: 10.8.0.2/32
   latest handshake: 59 seconds ago
   transfer: 83.34 KiB received, 441.58 KiB sent</code></pre>
-<figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-telephone-tunnel.jpg" alt="Informations sur le statut du téléphone : adresse IP 10.8.0.2"><figcaption>État du téléphone avec le tunnel actif : l'adresse IP est celle du plan d'adressage du VPN, <code>10.8.0.2</code> (encadrée).</figcaption></figure>
+<p class="project-video-link">Capture du plan d’adressage client masquée pour confidentialité ; le tunnel a bien été établi.</p>
 
 <h3>Test 5 : Accès au LAN du domicile à travers le tunnel</h3>
 <ul>
@@ -234,9 +234,9 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Observé :</b> la page de connexion, puis l'accueil de l'interface d'administration du routeur (modèle routeur domestique), s'ouvrent depuis le téléphone en données mobiles. Le ping aboutit : 9 paquets sur 9, 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms) sur la liaison mobile. Le TTL de 63, au lieu de 64, montre que les paquets traversent un saut de routage, l'hôte Proxmox. La sortie par <code>wlo1</code> avec la source <code>192.0.2.62</code> n'a pas été capturée sur le serveur : elle se déduit de la réponse du routeur, qui ne connaît pas le réseau <code>10.8.0.0/24</code>. <b>Verdict : Réussi.</b></li>
 </ul>
 <div class="evidence-grid" aria-label="Captures du test d'accès au LAN depuis le téléphone">
-<figure><img loading="lazy" src="assets/wireguard-routeur-login-via-vpn.jpg" alt="Page de connexion du routeur domestique ouverte depuis le téléphone à travers le VPN"><figcaption>Page de connexion du routeur, ouverte depuis le téléphone en données mobiles à travers le tunnel.</figcaption></figure>
+<p class="project-video-link">Capture de l’interface d’administration masquée ; l’accès distant à l’interface du routeur a été observé.</p>
 <figure><img loading="lazy" src="assets/wireguard-routeur-accueil-via-vpn.jpg" alt="Accueil de l'interface d'administration du routeur, état de connexion Internet normal"><figcaption>Accueil de l'interface d'administration après connexion, état de la connexion Internet « normal ». Le nom d'utilisateur affiché en haut à droite est masqué.</figcaption></figure>
-<figure><img loading="lazy" src="assets/wireguard-ping-routeur-lan.jpg" alt="Ping vers 192.0.2.1 : 9 paquets envoyés, 9 reçus, 0 % de perte"><figcaption>Ping vers <code>192.0.2.1</code> : 9 paquets envoyés, 9 reçus, 0 % de perte, latence de 143 à 205 ms, TTL 63.</figcaption></figure>
+<p class="project-video-link">Capture du test ping masquée : 9 paquets reçus sur 9, 0 % de perte, latence de 143 à 205 ms, TTL 63.</p>
 </div>
 <p><b>Observation complémentaire : seul le trafic déclaré passe par le tunnel.</b> Un site de test d'adresse IP, consulté depuis le téléphone avec le tunnel actif (icône de clé dans la barre d'état), affiche une adresse publique différente de celle du routeur du domicile. La navigation ordinaire du téléphone ne passe donc pas par le tunnel, conformément aux <code>AllowedIPs</code> qui ne déclarent que les trois réseaux du laboratoire.</p>
 <figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-publique-hors-tunnel.jpg" alt="Site de test d'adresse IP consulté depuis le téléphone, adresse publique masquée"><figcaption>Adresse publique vue par un site externe depuis le téléphone, tunnel actif. L'adresse est masquée.</figcaption></figure>
@@ -312,7 +312,7 @@ peer: &lt;clé publique du téléphone&gt;
 <h3 id="inc-005-duckdns-ko">INC-005 : La mise à jour DuckDNS répond <code>KO</code></h3>
 <ul>
 <li><b>Symptôme :</b> <code>/opt/duckdns/duck.log</code> contient <code>KO</code>, alors que la résolution DNS renvoie la bonne adresse (enregistrée plus tôt).</li>
-<li><b>Cause :</b> le paramètre <code>domains=</code> du script se terminait par un point (<code>nom.</code>), que DuckDNS ne reconnaît pas. Le nom doit être donné sans point et sans <code>.duckdns.org</code>.</li>
+<li><b>Cause :</b> le paramètre <code>domains=</code> du script se terminait par un point (<code>nom.</code>), que DuckDNS ne reconnaît pas. Le nom doit être donné sans point et sans suffixe de fournisseur.</li>
 <li><b>Risque :</b> sans mise à jour réussie, le jour où l'adresse publique change, le nom pointe vers l'ancienne adresse et le VPN cesse de fonctionner sans avertissement.</li>
 <li><b>Correction :</b> retrait du point dans le script avec <code>sed</code>. Le journal affiche ensuite <code>OK</code>.</li>
 <li><b>Enseignement :</b> lire le journal de la tâche de mise à jour juste après l'installation, au lieu de supposer qu'elle fonctionne parce que le nom résout déjà vers la bonne adresse.</li>
