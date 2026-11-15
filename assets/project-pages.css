@@ -28,3 +28,5 @@
 :where(.project-toc a,.project-video-link a,.project-copy,.project-lightbox button):focus-visible{outline:3px solid #b7b7b7;outline-offset:3px}
 @media(max-width:700px){.project-toc ol{columns:1}.project-overview{padding:1rem}.project-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.project-toc *{scroll-behavior:auto!important}}
+
+.article img[role="button"]{cursor:zoom-in}
