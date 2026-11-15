@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://jorisallabi.github.io/Portfolio/</loc><lastmod>2026-11-15</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/atlas.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/methode.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/supervision-zabbix-en-tres-haute-disponibilite-reseau-campus.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/reseau-d-entreprise-campus-redondant-segmentation-vlan-passe.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/interconnexion-de-deux-sites-d-entreprise-par-vpn-ipsec-ikev.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/acces-distant-securise-par-vpn-wireguard-sur-proxmox.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/deploiement-dune-infrastructure-voip-hybride-cisco-cme-sccp.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/design-et-implementation-d-une-infrastructure-vmware-resilie.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/infrastructure-windows-server-resiliente-ad-ds-dns-dhcp-gpo.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/interconnexion-de-sites-clients-par-un-backbone-operateur-mp.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/publication-d-applications-et-de-bureaux-avec-microsoft-remo.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/sauvegarde-et-reprise-apres-sinistre-avec-veeam-backup-repli.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/sauvegarde-et-restauration-d-une-infrastructure-virtualisee.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://jorisallabi.github.io/Portfolio/supervision-et-gestion-des-incidents-avec-zabbix-glpi-et-sau.html</loc><lastmod>2026-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>
