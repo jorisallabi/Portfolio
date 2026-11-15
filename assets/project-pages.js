@@ -5,9 +5,9 @@
   const existing=main.querySelector("ol.toc");
   if(existing){
     const nav=document.createElement("nav");nav.className="project-toc";nav.setAttribute("aria-label","Sommaire de la fiche");
-    const details=document.createElement("details");details.open=true;
+    const details=document.createElement("details");details.open=window.matchMedia("(min-width: 701px)").matches;
     const summary=document.createElement("summary");summary.textContent="Sommaire de la fiche";
-    existing.parentNode.insertBefore(nav,existing);nav.append(summary,existing);
+    existing.parentNode.insertBefore(nav,existing);details.append(summary,existing);nav.append(details);
   }else{
     const headings=[...main.querySelectorAll("h2[id]")];
     if(headings.length>3){
