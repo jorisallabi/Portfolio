@@ -2,6 +2,8 @@
   "use strict";
   const main=document.querySelector("main.article");
   if(!main)return;
+  main.id=main.id||"main-content";
+  if(!document.querySelector(".skip-link")){const skip=document.createElement("a");skip.className="skip-link";skip.href="#main-content";skip.textContent="Aller au contenu";document.body.prepend(skip);}
   const existing=main.querySelector("ol.toc");
   if(existing){
     const nav=document.createElement("nav");nav.className="project-toc";nav.setAttribute("aria-label","Sommaire de la fiche");
@@ -37,7 +39,7 @@
     button.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(pre.innerText);button.textContent="Copié";}catch(e){button.textContent="Copie indisponible";}});
     const parent=pre.parentNode;parent.insertBefore(details,pre);details.append(summary,button,pre);
   });
-  main.querySelectorAll("img").forEach((img,i)=>{if(i>0&&!img.hasAttribute("loading"))img.loading="lazy";});
+  main.querySelectorAll("img").forEach((img,i)=>{if(i>0&&!img.hasAttribute("loading"))img.loading="lazy";img.decoding="async";});
   main.querySelectorAll("img").forEach(img=>{
     if(img.closest("a")||img.dataset.lightbox==="off")return;
     img.tabIndex=0;img.setAttribute("role","button");img.setAttribute("aria-label","Agrandir l’image : "+(img.alt||"illustration"));
