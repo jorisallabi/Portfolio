@@ -12,7 +12,7 @@
     const headings=[...main.querySelectorAll("h2[id]")];
     if(headings.length>3){
       const nav=document.createElement("nav");nav.className="project-toc";nav.setAttribute("aria-label","Sommaire de la fiche");
-      const details=document.createElement("details");details.open=true;
+      const details=document.createElement("details");details.open=window.matchMedia("(min-width: 701px)").matches;
       const summary=document.createElement("summary");summary.textContent="Sommaire de la fiche";
       const list=document.createElement("ol");
       headings.forEach(h=>{const li=document.createElement("li"),a=document.createElement("a");a.href="#"+h.id;a.textContent=h.textContent.trim();li.append(a);list.append(li)});
@@ -39,7 +39,7 @@
   });
   main.querySelectorAll("img").forEach((img,i)=>{if(i>0&&!img.hasAttribute("loading"))img.loading="lazy";});
   main.querySelectorAll("img").forEach(img=>{
-    if(img.closest("a")||img.closest("figure")||img.dataset.lightbox==="off")return;
+    if(img.closest("a")||img.dataset.lightbox==="off")return;
     img.tabIndex=0;img.setAttribute("role","button");img.setAttribute("aria-label","Agrandir l’image : "+(img.alt||"illustration"));
     const open=()=>{const overlay=document.createElement("div");overlay.className="project-lightbox";overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");overlay.setAttribute("aria-label",img.alt||"Image agrandie");const big=document.createElement("img");big.src=img.currentSrc||img.src;big.alt=img.alt;const close=document.createElement("button");close.type="button";close.textContent="Fermer";close.addEventListener("click",()=>overlay.remove());overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});overlay.append(big,close);document.body.append(overlay);close.focus();const esc=e=>{if(e.key==="Escape"){overlay.remove();document.removeEventListener("keydown",esc)}};document.addEventListener("keydown",esc)};
     img.addEventListener("click",open);img.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
