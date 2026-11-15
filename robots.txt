@@ -1,0 +1,7 @@
+# Ce fichier est servi sous /Portfolio/robots.txt sur GitHub Pages.
+# Les robots standards consultent le robots.txt à la racine de l'hôte (/robots.txt).
+# Pour une politique réellement appliquée au domaine jorisallabi.github.io,
+# placer ce fichier dans le dépôt de site utilisateur jorisallabi.github.io.
+User-agent: *
+Allow: /
+Sitemap: https://jorisallabi.github.io/Portfolio/sitemap.xml
