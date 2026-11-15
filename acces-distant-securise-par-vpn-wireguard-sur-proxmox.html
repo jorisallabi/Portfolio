@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VPN WireGuard : accès distant au réseau local : Joris Allabi</title><meta name="description" content="Déploiement réel de WireGuard sur un ancien PC reconverti en serveur Proxmox (Intel Core i5 10e génération, 12 Go RAM, SSD 500 Go). Accès distant chiffré au véritable réseau domestique, avec routage, NAT, DuckDNS et tests depuis les données mobiles.">
+<title>VPN WireGuard : accès distant au réseau local : Joris Allabi</title><meta name="description" content="Déploiement de WireGuard sur un serveur Proxmox physique. Accès distant chiffré à un réseau local, avec routage, NAT, DNS dynamique et tests depuis les données mobiles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/portfolio.css"><link rel="stylesheet" href="assets/monochrome.css"><link rel="stylesheet" href="assets/site-polish.css"><link rel="stylesheet" href="assets/project-pages.css">
@@ -8,11 +8,11 @@
 <header class="top"><div class="bar"><a class="brand" href="index.html">JORIS ALLABI <span class="micro">/ PORTFOLIO</span></a><nav aria-label="Navigation principale"><a href="index.html#projets">Projets</a><a href="methode.html">Méthode</a><a href="index.html#contact">Contact</a></nav></div></header>
 <main class="wrap article"><p class="crumb"><a href="index.html#projets">← Tous les projets</a></p>
 <h1>VPN WireGuard sur Proxmox</h1>
-<div class="meta"><span class="badge wip">Fonctionnel à consolider</span><span class="chip">Déploiement sur matériel physique</span><span class="chip">7 tests réussis sur 8</span><span class="chip">Véritable LAN domestique · routeur Huawei · téléphone en 4G/5G</span></div>
+<div class="meta"><span class="badge wip">Fonctionnel à consolider</span><span class="chip">Déploiement sur matériel physique</span><span class="chip">7 tests réussis sur 8</span><span class="chip">Véritable LAN domestique · routeur domestique · téléphone en 4G/5G</span></div>
 <section class="project-overview" aria-labelledby="project-overview-title"><h2 id="project-overview-title">En bref</h2><p><span class="project-status">Fonctionnel à consolider</span></p><dl class="project-facts"><div><dt>Contexte</dt><dd>Projet personnel sur matériel physique</dd></div><div><dt>Mon rôle</dt><dd>Installation, routage, configuration WireGuard et tests</dd></div><div><dt>Environnement</dt><dd>Proxmox · Linux · WireGuard · NAT · DNS dynamique</dd></div><div><dt>Tests</dt><dd>7 réussis sur 8</dd></div><div><dt>Accès distant</dt><dd>Tunnel établi depuis le réseau mobile</dd></div><div><dt>Connectivité</dt><dd>9 pings sur 9 reçus vers le routeur</dd></div><div><dt>Point ouvert</dt><dd>Redémarrage complet du serveur non testé</dd></div></dl><p>Le tunnel et l'accès au LAN ont été testés. Le redémarrage complet du serveur reste à valider ; les détails d'adressage et d'accès sont à examiner au titre de la confidentialité.</p><p><a href="#limites">Consulter les limites et risques résiduels</a></p></section>
 <aside>
 <p><b>Statut au 08/11/2026 : le VPN fonctionne depuis un téléphone en données mobiles, avec accès au serveur et au LAN du domicile.</b> Un point reste ouvert et il est décrit sans être masqué : le test de redémarrage complet du serveur n'a pas encore été fait. La mise à jour automatique du DNS dynamique, qui avait d'abord renvoyé une erreur, est corrigée et validée.</p>
-<p>Les clés, le jeton DuckDNS, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC sont remplacés par des repères dans cette fiche. Sur les captures d'écran, l'adresse IP publique, le nom du tunnel (identique au sous-domaine) et un nom d'utilisateur du routeur sont masqués.</p>
+<p>Les clés, le jeton DNS dynamique, l'adresse IP publique, les identifiants Wi-Fi et les adresses MAC ne sont pas publiés. Les adresses privées ont été remplacées par des plages réservées à la documentation (RFC 5737) ; elles ne correspondent pas à la configuration réelle.</p>
 </aside>
 
 <h2 id="sommaire">Sommaire</h2>
@@ -43,7 +43,7 @@
 <tr><td>Stockage</td><td>SSD 500 Go</td></tr>
 <tr><td>Hyperviseur</td><td>Proxmox VE installé directement sur le matériel (bare metal)</td></tr>
 <tr><td>VPN</td><td>WireGuard déployé sur l'hôte Proxmox</td></tr>
-<tr><td>Réseau desservi</td><td>Véritable LAN du domicile, derrière le routeur Huawei</td></tr>
+<tr><td>Réseau desservi</td><td>Véritable LAN du domicile, derrière le routeur domestique</td></tr>
 <tr><td>Client distant testé</td><td>Téléphone connecté en données mobiles, hors du Wi-Fi domestique</td></tr>
 </tbody></table>
 <p>Le matériel n'est pas un décor autour d'un schéma : c'est le serveur qui fonctionne réellement sur mon réseau et qui héberge le service d'accès distant. Le tunnel a été établi depuis l'extérieur et l'accès au routeur du domicile a été vérifié à travers celui-ci.</p>
@@ -58,9 +58,9 @@
 <h3>Chiffres vérifiables</h3>
 <ul>
 <li>1 tunnel WireGuard, 1 pair (le téléphone), 1 seul port exposé sur Internet : <code>UDP 51820</code>.</li>
-<li>3 réseaux atteignables depuis le tunnel : <code>10.10.10.0/24</code> (le VPN), <code>192.168.100.0/24</code> (LAN du domicile) et <code>192.168.137.0/24</code> (réseau de gestion, tant que le PC est allumé).</li>
+<li>3 réseaux atteignables depuis le tunnel : <code>10.8.0.0/24</code> (le VPN), <code>192.0.2.0/24</code> (LAN du domicile) et <code>198.51.100.0/24</code> (réseau de gestion, tant que le PC est allumé).</li>
 <li>Handshake observé sur la capture : 3 paquets UDP de 148, 92 et 32 octets, puis <code>latest handshake</code> de 59 secondes avec du trafic dans les deux sens.</li>
-<li>Test depuis le téléphone en données mobiles : 9 pings sur 9 reçus vers le routeur (<code>192.168.100.1</code>), 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms).</li>
+<li>Test depuis le téléphone en données mobiles : 9 pings sur 9 reçus vers le routeur (<code>192.0.2.1</code>), 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms).</li>
 <li>Mise à jour DNS prévue toutes les 5 minutes par une tâche planifiée.</li>
 <li>8 tests : 7 réussis, 1 non réalisé (redémarrage).</li>
 </ul>
@@ -77,30 +77,30 @@
 <tr><td>WireGuard installé sur l'hôte Proxmox, pas dans une VM</td><td>Le VPN reste actif tant que le serveur est allumé, sans double NAT et sans dépendre d'une machine virtuelle. Une VM sur un pont relié à une carte Wi-Fi poserait un problème : un pont ne fonctionne pas avec une interface Wi-Fi en mode client.</td><td>Aucune VM n'est nécessaire. En contrepartie, le VPN est installé sur l'hôte lui-même.</td></tr>
 <tr><td>Entrée du VPN par le Wi-Fi (<code>wlo1</code>) plutôt que par le port filaire</td><td>Le lien filaire passe par un PC qui n'est pas toujours allumé.</td><td>Il faut deux sorties vers Internet sur le même serveur, donc un routage par politique pour que les réponses repartent par le bon lien.</td></tr>
 <tr><td>DNS dynamique (DuckDNS)</td><td>L'adresse IP publique du routeur n'est pas statique.</td><td>La configuration du client utilise un nom, et une tâche planifiée met l'adresse à jour.</td></tr>
-<tr><td>NAT (masquerade) vers le LAN</td><td>Les équipements du domicile ne connaissent pas le réseau <code>10.10.10.0/24</code> et ne sauraient pas répondre au client.</td><td>Ils voient les connexions comme venant de l'hôte Proxmox (<code>192.168.100.62</code>).</td></tr>
+<tr><td>NAT (masquerade) vers le LAN</td><td>Les équipements du domicile ne connaissent pas le réseau <code>10.8.0.0/24</code> et ne sauraient pas répondre au client.</td><td>Ils voient les connexions comme venant de l'hôte Proxmox (<code>192.0.2.62</code>).</td></tr>
 </tbody></table>
 
 <h2 id="architecture">2. Architecture et plan d'adressage</h2>
-<p>La topologie repose sur des équipements et des liaisons physiques de mon domicile. Le serveur Proxmox est raccordé au réseau réel par son interface Wi-Fi ; son interface Ethernet est utilisée pour un réseau de gestion distinct. Le routeur Huawei assure l'accès Internet et la redirection du seul port WireGuard.</p>
-<p>Le téléphone se connecte en données mobiles au nom DuckDNS, qui pointe vers l'adresse publique du routeur Huawei. Le routeur redirige le port UDP 51820 vers l'interface Wi-Fi du serveur, où <code>wg0</code> termine le tunnel. De là, le trafic est routé vers le LAN du domicile (par le Wi-Fi) ou vers le réseau de gestion (par <code>vmbr0</code>).</p>
+<p>La topologie repose sur des équipements et des liaisons physiques de mon domicile. Le serveur Proxmox est raccordé au réseau réel par son interface Wi-Fi ; son interface Ethernet est utilisée pour un réseau de gestion distinct. Le routeur domestique assure l'accès Internet et la redirection du seul port WireGuard.</p>
+<p>Le téléphone se connecte en données mobiles au nom DuckDNS, qui pointe vers l'adresse publique du routeur domestique. Le routeur redirige le port UDP 51820 vers l'interface Wi-Fi du serveur, où <code>wg0</code> termine le tunnel. De là, le trafic est routé vers le LAN du domicile (par le Wi-Fi) ou vers le réseau de gestion (par <code>vmbr0</code>).</p>
 <figure class="embed"><iframe src="assets/schema-vpn-wireguard-proxmox.html" loading="lazy" title="Schéma d'architecture du VPN WireGuard sur Proxmox"></iframe><figcaption><a href="assets/schema-vpn-wireguard-proxmox.html" target="_blank" rel="noopener">Ouvrir le schéma en plein écran ↗</a></figcaption></figure>
 <h3>Plan d'adressage</h3>
 <table>
 <thead><tr><th>Élément</th><th>Adresse</th><th>Rôle</th></tr></thead>
 <tbody>
-<tr><td>Routeur Huawei (LAN)</td><td><code>192.168.100.1</code></td><td>Passerelle du domicile, porte la redirection <code>UDP 51820</code></td></tr>
-<tr><td>Proxmox, <code>wlo1</code></td><td><code>192.168.100.62/24</code></td><td>Entrée du VPN, adresse fixe</td></tr>
-<tr><td>Proxmox, <code>vmbr0</code></td><td><code>192.168.137.3/24</code></td><td>Réseau de gestion, port filaire <code>eno1</code> relié au PC</td></tr>
-<tr><td>Proxmox, <code>wg0</code></td><td><code>10.10.10.1/24</code></td><td>Serveur WireGuard, écoute sur <code>UDP 51820</code></td></tr>
-<tr><td>Téléphone</td><td><code>10.10.10.2/24</code></td><td>Client, déclaré en <code>10.10.10.2/32</code> côté serveur</td></tr>
+<tr><td>routeur domestique (LAN)</td><td><code>192.0.2.1</code></td><td>Passerelle du domicile, porte la redirection <code>UDP 51820</code></td></tr>
+<tr><td>Proxmox, <code>wlo1</code></td><td><code>192.0.2.62/24</code></td><td>Entrée du VPN, adresse fixe</td></tr>
+<tr><td>Proxmox, <code>vmbr0</code></td><td><code>198.51.100.3/24</code></td><td>Réseau de gestion, port filaire <code>eno1</code> relié au PC</td></tr>
+<tr><td>Proxmox, <code>wg0</code></td><td><code>10.8.0.1/24</code></td><td>Serveur WireGuard, écoute sur <code>UDP 51820</code></td></tr>
+<tr><td>Téléphone</td><td><code>10.8.0.2/24</code></td><td>Client, déclaré en <code>10.8.0.2/32</code> côté serveur</td></tr>
 </tbody></table>
 <h3>Parcours d'un paquet</h3>
 <ol>
 <li>Le téléphone envoie un paquet chiffré vers le nom DuckDNS, port <code>UDP 51820</code>.</li>
-<li>Le routeur traduit l'adresse de destination vers <code>192.168.100.62</code> et transmet à <code>wlo1</code>.</li>
-<li><code>wg0</code> déchiffre le paquet, dont la destination est par exemple <code>192.168.100.1</code> (le routeur lui-même).</li>
-<li>Le noyau le route vers <code>wlo1</code>, et la règle de NAT remplace l'adresse source <code>10.10.10.2</code> par <code>192.168.100.62</code>.</li>
-<li>La réponse revient vers <code>192.168.100.62</code>, le NAT la restitue, et <code>wg0</code> la chiffre vers le téléphone.</li>
+<li>Le routeur traduit l'adresse de destination vers <code>192.0.2.62</code> et transmet à <code>wlo1</code>.</li>
+<li><code>wg0</code> déchiffre le paquet, dont la destination est par exemple <code>192.0.2.1</code> (le routeur lui-même).</li>
+<li>Le noyau le route vers <code>wlo1</code>, et la règle de NAT remplace l'adresse source <code>10.8.0.2</code> par <code>192.0.2.62</code>.</li>
+<li>La réponse revient vers <code>192.0.2.62</code>, le NAT la restitue, et <code>wg0</code> la chiffre vers le téléphone.</li>
 </ol>
 
 <h2 id="mise-en-oeuvre">3. Mise en œuvre</h2>
@@ -120,22 +120,22 @@ ssid=&lt;SSID du routeur&gt;
 wpa_state=COMPLETED</code></pre>
 
 <h3>3.2 Routage par politique : répondre par le lien d'où vient la requête</h3>
-<p>Le serveur a deux sorties vers Internet. Sa route par défaut passe par <code>vmbr0</code> (le PC). Sans règle supplémentaire, une réponse WireGuard émise depuis <code>192.168.100.62</code> partirait par ce lien au lieu de revenir par le Wi-Fi, et le tunnel ne s'établirait pas. Une table de routage dédiée (<code>100</code>) force les paquets émis depuis l'adresse Wi-Fi à sortir par <code>wlo1</code>.</p>
-<pre><code>ip route add 192.168.100.0/24 dev wlo1 src 192.168.100.62 table 100
-ip route add default via 192.168.100.1 dev wlo1 table 100
-ip rule add from 192.168.100.62 table 100</code></pre>
+<p>Le serveur a deux sorties vers Internet. Sa route par défaut passe par <code>vmbr0</code> (le PC). Sans règle supplémentaire, une réponse WireGuard émise depuis <code>192.0.2.62</code> partirait par ce lien au lieu de revenir par le Wi-Fi, et le tunnel ne s'établirait pas. Une table de routage dédiée (<code>100</code>) force les paquets émis depuis l'adresse Wi-Fi à sortir par <code>wlo1</code>.</p>
+<pre><code>ip route add 192.0.2.0/24 dev wlo1 src 192.0.2.62 table 100
+ip route add default via 192.0.2.1 dev wlo1 table 100
+ip rule add from 192.0.2.62 table 100</code></pre>
 <p>Pour que ces règles survivent à un redémarrage, elles sont placées dans le bloc <code>wlo1</code> de <code>/etc/network/interfaces</code>. La ligne <code>gateway</code> du bloc d'origine n'est pas conservée, afin de ne pas créer une seconde route par défaut dans la table principale. Les <code>|| true</code> évitent qu'<code>ifup</code> échoue si une règle existe déjà.</p>
 <pre><code>iface wlo1 inet static
-        address 192.168.100.62/24
+        address 192.0.2.62/24
         wpa-conf /etc/wpa_supplicant/wpa_supplicant-wlo1.conf
-        post-up ip route add 192.168.100.0/24 dev wlo1 src 192.168.100.62 table 100 || true
-        post-up ip route add default via 192.168.100.1 dev wlo1 table 100 || true
-        post-up ip rule add from 192.168.100.62 table 100 || true
-        pre-down ip rule del from 192.168.100.62 table 100 || true</code></pre>
+        post-up ip route add 192.0.2.0/24 dev wlo1 src 192.0.2.62 table 100 || true
+        post-up ip route add default via 192.0.2.1 dev wlo1 table 100 || true
+        post-up ip rule add from 192.0.2.62 table 100 || true
+        pre-down ip rule del from 192.0.2.62 table 100 || true</code></pre>
 <p>Contrôle de la table dédiée (sortie observée) :</p>
 <pre><code>$ ip route show table 100
-default via 192.168.100.1 dev wlo1
-192.168.100.0/24 dev wlo1 scope link src 192.168.100.62</code></pre>
+default via 192.0.2.1 dev wlo1
+192.0.2.0/24 dev wlo1 scope link src 192.0.2.62</code></pre>
 
 <h3>3.3 Serveur WireGuard</h3>
 <p>Les paires de clés sont générées sur le serveur avec un <code>umask 077</code>, puis chaque clé publique est copiée dans la configuration de l'autre extrémité. Une clé privée n'est jamais copiée dans la configuration du pair.</p>
@@ -145,22 +145,22 @@ wg genkey | tee server.key | wg pubkey &gt; server.pub
 wg genkey | tee client.key | wg pubkey &gt; client.pub</code></pre>
 <p>Fichier <code>/etc/wireguard/wg0.conf</code> (clés remplacées par des repères). Le <code>PostUp</code> active le routage entre interfaces et pose deux règles de NAT, une vers le LAN du domicile (<code>wlo1</code>) et une vers le réseau de gestion (<code>vmbr0</code>) :</p>
 <pre><code>[Interface]
-Address = 10.10.10.1/24
+Address = 10.8.0.1/24
 ListenPort = 51820
 PrivateKey = &lt;clé privée du serveur&gt;
-PostUp = sysctl -w net.ipv4.ip_forward=1; iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o wlo1 -j MASQUERADE
-PostDown = iptables -t nat -D POSTROUTING -s 10.10.10.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -D POSTROUTING -s 10.10.10.0/24 -o wlo1 -j MASQUERADE
+PostUp = sysctl -w net.ipv4.ip_forward=1; iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o wlo1 -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o vmbr0 -j MASQUERADE; iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o wlo1 -j MASQUERADE
 
 [Peer]
 PublicKey = &lt;clé publique du téléphone&gt;
-AllowedIPs = 10.10.10.2/32</code></pre>
+AllowedIPs = 10.8.0.2/32</code></pre>
 <p>Activation au démarrage et contrôle :</p>
 <pre><code>systemctl enable --now wg-quick@wg0
 wg show</code></pre>
 
 <h3>3.4 Redirection de port sur le routeur</h3>
-<p>Une règle de redirection envoie le port <code>UDP 51820</code> du routeur vers <code>192.168.100.62</code>. Le routeur n'a pas de champ « protocole » dans le premier formulaire : il apparaît dans un second bloc, qui doit être réglé sur <code>UDP</code>, avec les deux cases de chaque plage de ports renseignées (<code>51820</code> à <code>51820</code>). L'adresse physique de l'hôte, visible sur la capture d'origine, est masquée.</p>
-<figure><img loading="lazy" src="assets/wireguard-redirection-port-routeur.png" alt="Formulaire de redirection de port du routeur : nom VPN_WIREGUARD, hôte interne 192.168.100.62, protocole UDP, port interne et externe 51820"><figcaption>Règle de redirection <code>UDP 51820</code> vers l'hôte Proxmox. Capture prise pendant la saisie, avant la validation par « Add » et « Apply » ; la seconde case de chaque plage a été complétée ensuite.</figcaption></figure>
+<p>Une règle de redirection envoie le port <code>UDP 51820</code> du routeur vers <code>192.0.2.62</code>. Le routeur n'a pas de champ « protocole » dans le premier formulaire : il apparaît dans un second bloc, qui doit être réglé sur <code>UDP</code>, avec les deux cases de chaque plage de ports renseignées (<code>51820</code> à <code>51820</code>). L'adresse physique de l'hôte, visible sur la capture d'origine, est masquée.</p>
+<figure><img loading="lazy" src="assets/wireguard-redirection-port-routeur.png" alt="Formulaire de redirection de port du routeur : nom VPN_WIREGUARD, hôte interne 192.0.2.62, protocole UDP, port interne et externe 51820"><figcaption>Règle de redirection <code>UDP 51820</code> vers l'hôte Proxmox. Capture prise pendant la saisie, avant la validation par « Add » et « Apply » ; la seconde case de chaque plage a été complétée ensuite.</figcaption></figure>
 <p>Avant de configurer cette redirection, j'ai vérifié que le routeur n'est pas derrière un CGNAT : l'adresse WAN affichée par le routeur est identique à celle qu'un service externe me renvoie. Si elles avaient différé, aucune redirection de port n'aurait fonctionné depuis l'extérieur.</p>
 
 <h3>3.5 DNS dynamique (DuckDNS)</h3>
@@ -173,13 +173,13 @@ curl -s --interface wlo1 "https://www.duckdns.org/update?domains=&lt;sous-domain
 <h3>3.6 Client (téléphone)</h3>
 <p>Le client est configuré dans l'application WireGuard du téléphone. Son fichier de configuration contient la clé privée du téléphone : il ne doit être conservé ni sur le serveur, ni dans un dépôt. Les trois réseaux sont déclarés dans <code>AllowedIPs</code>, ce qui n'envoie dans le tunnel que le trafic destiné à ces réseaux, pas tout le trafic du téléphone. L'<code>Endpoint</code> désigne le nom DuckDNS, ou l'adresse publique pendant les premiers essais.</p>
 <pre><code>[Interface]
-Address = 10.10.10.2/24
+Address = 10.8.0.2/24
 PrivateKey = &lt;clé privée du téléphone&gt;
 
 [Peer]
 PublicKey = &lt;clé publique du serveur&gt;
-Endpoint = &lt;sous-domaine&gt;.duckdns.org:51820
-AllowedIPs = 10.10.10.0/24, 192.168.100.0/24, 192.168.137.0/24
+Endpoint = vpn.example.net:51820
+AllowedIPs = 10.8.0.0/24, 192.0.2.0/24, 198.51.100.0/24
 PersistentKeepalive = 25</code></pre>
 <figure><img loading="lazy" src="assets/wireguard-app-tunnel-actif.jpg" alt="Application WireGuard du téléphone : un tunnel est activé, son nom est masqué"><figcaption>Application WireGuard sur le téléphone : le tunnel est activé et l'icône de clé de la barre d'état indique une connexion VPN. Le nom du tunnel, identique au sous-domaine DuckDNS, est masqué.</figcaption></figure>
 
@@ -188,7 +188,7 @@ PersistentKeepalive = 25</code></pre>
 
 <h3>Test 1 : Association Wi-Fi de <code>wlo1</code></h3>
 <ul>
-<li><b>Procédure :</b> <code>wpa_cli -i wlo1 status</code>, puis <code>ping -I wlo1 192.168.100.1</code>.</li>
+<li><b>Procédure :</b> <code>wpa_cli -i wlo1 status</code>, puis <code>ping -I wlo1 192.0.2.1</code>.</li>
 <li><b>Attendu :</b> <code>wpa_state=COMPLETED</code> et réponses du routeur.</li>
 <li><b>Observé :</b> association établie après nettoyage des instances en double (voir INC-001) ; le routeur répond en 5 à 8 ms. <b>Verdict : Réussi.</b></li>
 </ul>
@@ -211,32 +211,32 @@ PersistentKeepalive = 25</code></pre>
 <ul>
 <li><b>Procédure :</b> <code>tcpdump -ni wlo1 udp port 51820</code> pendant l'activation du tunnel sur le téléphone, puis <code>wg show</code>.</li>
 <li><b>Attendu :</b> un échange de handshake sur <code>wlo1</code>, puis un <code>latest handshake</code> récent côté serveur.</li>
-<li><b>Observé :</b> trois paquets : 148 octets du téléphone vers le serveur (initiation), 92 octets en réponse, 32 octets du téléphone (premier keepalive). Puis un handshake de 59 secondes avec du trafic dans les deux sens. Côté téléphone, l'application affiche le tunnel actif et l'adresse du téléphone est <code>10.10.10.2</code>. <b>Verdict : Réussi.</b></li>
+<li><b>Observé :</b> trois paquets : 148 octets du téléphone vers le serveur (initiation), 92 octets en réponse, 32 octets du téléphone (premier keepalive). Puis un handshake de 59 secondes avec du trafic dans les deux sens. Côté téléphone, l'application affiche le tunnel actif et l'adresse du téléphone est <code>10.8.0.2</code>. <b>Verdict : Réussi.</b></li>
 </ul>
-<pre><code>01:59:01.260922 IP &lt;IP mobile&gt;.34661 &gt; 192.168.100.62.51820: UDP, length 148
-01:59:01.261299 IP 192.168.100.62.51820 &gt; &lt;IP mobile&gt;.34661: UDP, length 92
-01:59:01.465851 IP &lt;IP mobile&gt;.34661 &gt; 192.168.100.62.51820: UDP, length 32</code></pre>
+<pre><code>01:59:01.260922 IP &lt;IP mobile&gt;.34661 &gt; 192.0.2.62.51820: UDP, length 148
+01:59:01.261299 IP 192.0.2.62.51820 &gt; &lt;IP mobile&gt;.34661: UDP, length 92
+01:59:01.465851 IP &lt;IP mobile&gt;.34661 &gt; 192.0.2.62.51820: UDP, length 32</code></pre>
 <pre><code>interface: wg0
   public key: &lt;clé publique du serveur&gt;
   listening port: 51820
 
 peer: &lt;clé publique du téléphone&gt;
   endpoint: &lt;IP mobile&gt;:&lt;port&gt;
-  allowed ips: 10.10.10.2/32
+  allowed ips: 10.8.0.2/32
   latest handshake: 59 seconds ago
   transfer: 83.34 KiB received, 441.58 KiB sent</code></pre>
-<figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-telephone-tunnel.jpg" alt="Informations sur le statut du téléphone : adresse IP 10.10.10.2"><figcaption>État du téléphone avec le tunnel actif : l'adresse IP est celle du plan d'adressage du VPN, <code>10.10.10.2</code> (encadrée).</figcaption></figure>
+<figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-telephone-tunnel.jpg" alt="Informations sur le statut du téléphone : adresse IP 10.8.0.2"><figcaption>État du téléphone avec le tunnel actif : l'adresse IP est celle du plan d'adressage du VPN, <code>10.8.0.2</code> (encadrée).</figcaption></figure>
 
 <h3>Test 5 : Accès au LAN du domicile à travers le tunnel</h3>
 <ul>
-<li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.168.100.1</code>) et lancer un ping vers cette adresse, après ajout du NAT sur <code>wlo1</code> et de <code>192.168.100.0/24</code> dans <code>AllowedIPs</code>.</li>
-<li><b>Attendu :</b> la page du routeur répond ; sur le serveur, les paquets sortent par <code>wlo1</code> avec la source <code>192.168.100.62</code>.</li>
-<li><b>Observé :</b> la page de connexion, puis l'accueil de l'interface d'administration du routeur (modèle HG8145V6), s'ouvrent depuis le téléphone en données mobiles. Le ping aboutit : 9 paquets sur 9, 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms) sur la liaison mobile. Le TTL de 63, au lieu de 64, montre que les paquets traversent un saut de routage, l'hôte Proxmox. La sortie par <code>wlo1</code> avec la source <code>192.168.100.62</code> n'a pas été capturée sur le serveur : elle se déduit de la réponse du routeur, qui ne connaît pas le réseau <code>10.10.10.0/24</code>. <b>Verdict : Réussi.</b></li>
+<li><b>Procédure :</b> depuis le téléphone, tunnel actif en données mobiles, ouvrir la page du routeur (<code>192.0.2.1</code>) et lancer un ping vers cette adresse, après ajout du NAT sur <code>wlo1</code> et de <code>192.0.2.0/24</code> dans <code>AllowedIPs</code>.</li>
+<li><b>Attendu :</b> la page du routeur répond ; sur le serveur, les paquets sortent par <code>wlo1</code> avec la source <code>192.0.2.62</code>.</li>
+<li><b>Observé :</b> la page de connexion, puis l'accueil de l'interface d'administration du routeur (modèle routeur domestique), s'ouvrent depuis le téléphone en données mobiles. Le ping aboutit : 9 paquets sur 9, 0 % de perte, latence de 143 à 205 ms (moyenne 185 ms) sur la liaison mobile. Le TTL de 63, au lieu de 64, montre que les paquets traversent un saut de routage, l'hôte Proxmox. La sortie par <code>wlo1</code> avec la source <code>192.0.2.62</code> n'a pas été capturée sur le serveur : elle se déduit de la réponse du routeur, qui ne connaît pas le réseau <code>10.8.0.0/24</code>. <b>Verdict : Réussi.</b></li>
 </ul>
 <div class="evidence-grid" aria-label="Captures du test d'accès au LAN depuis le téléphone">
-<figure><img loading="lazy" src="assets/wireguard-routeur-login-via-vpn.jpg" alt="Page de connexion du routeur Huawei ouverte depuis le téléphone à travers le VPN"><figcaption>Page de connexion du routeur, ouverte depuis le téléphone en données mobiles à travers le tunnel.</figcaption></figure>
+<figure><img loading="lazy" src="assets/wireguard-routeur-login-via-vpn.jpg" alt="Page de connexion du routeur domestique ouverte depuis le téléphone à travers le VPN"><figcaption>Page de connexion du routeur, ouverte depuis le téléphone en données mobiles à travers le tunnel.</figcaption></figure>
 <figure><img loading="lazy" src="assets/wireguard-routeur-accueil-via-vpn.jpg" alt="Accueil de l'interface d'administration du routeur, état de connexion Internet normal"><figcaption>Accueil de l'interface d'administration après connexion, état de la connexion Internet « normal ». Le nom d'utilisateur affiché en haut à droite est masqué.</figcaption></figure>
-<figure><img loading="lazy" src="assets/wireguard-ping-routeur-lan.jpg" alt="Ping vers 192.168.100.1 : 9 paquets envoyés, 9 reçus, 0 % de perte"><figcaption>Ping vers <code>192.168.100.1</code> : 9 paquets envoyés, 9 reçus, 0 % de perte, latence de 143 à 205 ms, TTL 63.</figcaption></figure>
+<figure><img loading="lazy" src="assets/wireguard-ping-routeur-lan.jpg" alt="Ping vers 192.0.2.1 : 9 paquets envoyés, 9 reçus, 0 % de perte"><figcaption>Ping vers <code>192.0.2.1</code> : 9 paquets envoyés, 9 reçus, 0 % de perte, latence de 143 à 205 ms, TTL 63.</figcaption></figure>
 </div>
 <p><b>Observation complémentaire : seul le trafic déclaré passe par le tunnel.</b> Un site de test d'adresse IP, consulté depuis le téléphone avec le tunnel actif (icône de clé dans la barre d'état), affiche une adresse publique différente de celle du routeur du domicile. La navigation ordinaire du téléphone ne passe donc pas par le tunnel, conformément aux <code>AllowedIPs</code> qui ne déclarent que les trois réseaux du laboratoire.</p>
 <figure class="phone-shot"><img loading="lazy" src="assets/wireguard-ip-publique-hors-tunnel.jpg" alt="Site de test d'adresse IP consulté depuis le téléphone, adresse publique masquée"><figcaption>Adresse publique vue par un site externe depuis le téléphone, tunnel actif. L'adresse est masquée.</figcaption></figure>
@@ -258,8 +258,8 @@ peer: &lt;clé publique du téléphone&gt;
 
 <h3>Test 8 : Accès au poste Windows du LAN depuis un réseau Wi-Fi externe (RDP)</h3>
 <ul>
-<li><b>Contexte :</b> le laptop est d'abord connecté à un réseau Wi-Fi extérieur au domicile, avec l'adresse <code>192.168.158.162</code>. Le poste Windows de destination est sur le LAN domestique, à l'adresse <code>192.168.100.109</code>.</li>
-<li><b>Avant activation du VPN :</b> le ping vers <code>192.168.100.109</code> échoue et le poste est inaccessible par le Bureau à distance (RDP). Ce comportement est attendu : le réseau externe ne dispose pas de route vers le LAN privé du domicile.</li>
+<li><b>Contexte :</b> le laptop est d'abord connecté à un réseau Wi-Fi extérieur au domicile, avec l'adresse <code>203.0.113.162</code>. Le poste Windows de destination est sur le LAN domestique, à l'adresse <code>192.0.2.109</code>.</li>
+<li><b>Avant activation du VPN :</b> le ping vers <code>192.0.2.109</code> échoue et le poste est inaccessible par le Bureau à distance (RDP). Ce comportement est attendu : le réseau externe ne dispose pas de route vers le LAN privé du domicile.</li>
 <li><b>Après activation de WireGuard :</b> le ping vers le poste répond, la session Bureau à distance s'établit et l'interface d'administration du routeur domestique reste accessible depuis le laptop.</li>
 <li><b>Résultat :</b> l'accès à un poste utilisateur Windows et à l'interface du routeur est validé depuis un second type de client distant, connecté à un réseau tiers. Ce test complète le test mobile précédent en vérifiant un usage concret d'administration à distance, au-delà de la seule connectivité vers le routeur. <b>Verdict : Réussi.</b></li>
 </ul>
@@ -290,7 +290,7 @@ peer: &lt;clé publique du téléphone&gt;
 <ul>
 <li><b>Symptôme :</b> <code>curl --interface wlo1</code> échoue en 4 à 15 ms, et <code>ping -I wlo1</code> répond « Network is unreachable », alors que le routeur répond en local.</li>
 <li><b>Cause :</b> la seule route par défaut passe par <code>vmbr0</code> ; aucune route n'existe via <code>wlo1</code>. Un échec aussi rapide indique un problème local, pas un blocage distant.</li>
-<li><b>Correction :</b> table de routage <code>100</code> et règle <code>ip rule add from 192.168.100.62 table 100</code>. <code>curl</code> renvoie ensuite l'adresse publique.</li>
+<li><b>Correction :</b> table de routage <code>100</code> et règle <code>ip rule add from 192.0.2.62 table 100</code>. <code>curl</code> renvoie ensuite l'adresse publique.</li>
 <li><b>Enseignement :</b> avec deux sorties, une réponse doit repartir par l'interface d'où est venue la requête ; c'est exactement le besoin de WireGuard côté Wi-Fi.</li>
 </ul>
 <h3 id="inc-003-ifup-echoue-sur-wpasupplicant">INC-003 : <code>ifup wlo1</code> échoue sur le script <code>wpasupplicant</code></h3>
@@ -298,7 +298,7 @@ peer: &lt;clé publique du téléphone&gt;
 <li><b>Symptôme :</b> <code>ifup</code> s'arrête avec « pre-up cmd /etc/network/if-pre-up.d/wpasupplicant failed: returned 1 », et <code>wpa_state=INTERFACE_DISABLED</code>.</li>
 <li><b>Cause :</b> une instance lancée à la main occupait déjà l'interface, donc celle que le script d'<code>ifup</code> voulait démarrer ne pouvait pas démarrer.</li>
 <li><b>Correction :</b> arrêt de toutes les instances, suppression des fichiers de contrôle résiduels, désactivation du service <code>wpa_supplicant</code> du système, puis <code>ifup wlo1</code> comme seul gestionnaire du Wi-Fi. Une seule instance est alors présente (avec le fichier de PID d'<code>ifup</code>), l'association est <code>COMPLETED</code> et la table <code>100</code> est remplie.</li>
-<li><b>Observation :</b> la règle <code>from 192.168.100.62 lookup 100</code> apparaissait en double (ajout manuel, puis <code>post-up</code>). Sans conséquence, supprimée avec <code>ip rule del</code>.</li>
+<li><b>Observation :</b> la règle <code>from 192.0.2.62 lookup 100</code> apparaissait en double (ajout manuel, puis <code>post-up</code>). Sans conséquence, supprimée avec <code>ip rule del</code>.</li>
 <li><b>Enseignement :</b> un seul acteur gère l'interface. Mélanger lancement manuel et configuration persistante crée des conflits qui reviennent au redémarrage.</li>
 </ul>
 <h3 id="inc-004-pas-de-handshake-apres-redemarrage-de-wg0">INC-004 : Aucun handshake après le redémarrage de <code>wg0</code></h3>
@@ -327,8 +327,8 @@ peer: &lt;clé publique du téléphone&gt;
 <tr><td>Clés privées</td><td>Appliqué</td><td>Générées avec <code>umask 077</code> dans <code>/etc/wireguard</code>. Seules les clés publiques sont copiées dans la configuration de l'autre extrémité.</td></tr>
 <tr><td>Jeton DuckDNS et mot de passe Wi-Fi</td><td>Appliqué</td><td>Stockés dans des fichiers réservés à <code>root</code> (<code>chmod 700</code> et <code>chmod 600</code>). Le jeton permet de rediriger le domaine : il ne doit figurer dans aucun dépôt ni capture.</td></tr>
 <tr><td>Filtrage du trafic issu du tunnel</td><td>Non configuré</td><td>Le client peut atteindre tout ce qui est routable depuis le serveur. À durcir par des règles de pare-feu limitées aux services utiles.</td></tr>
-<tr><td>Traçabilité par client</td><td>Limitée</td><td>À cause du NAT, les équipements du domicile voient <code>192.168.100.62</code>, pas l'adresse du client VPN.</td></tr>
-<tr><td>Client sur le Wi-Fi du domicile</td><td>Point d'attention</td><td>La route <code>192.168.100.0/24</code> du tunnel entre en conflit avec le réseau local réel : le tunnel doit être désactivé quand le téléphone est déjà à la maison.</td></tr>
+<tr><td>Traçabilité par client</td><td>Limitée</td><td>À cause du NAT, les équipements du domicile voient <code>192.0.2.62</code>, pas l'adresse du client VPN.</td></tr>
+<tr><td>Client sur le Wi-Fi du domicile</td><td>Point d'attention</td><td>La route <code>192.0.2.0/24</code> du tunnel entre en conflit avec le réseau local réel : le tunnel doit être désactivé quand le téléphone est déjà à la maison.</td></tr>
 </tbody></table>
 
 <h2 id="exploitation">7. Exploitation : commandes de contrôle</h2>
@@ -338,21 +338,21 @@ peer: &lt;clé publique du téléphone&gt;
 <tr><td>Wi-Fi</td><td><code>wpa_cli -i wlo1 status | grep -E "wpa_state|ssid"</code></td><td>Association au routeur (<code>COMPLETED</code>)</td></tr>
 <tr><td>Wi-Fi</td><td><code>pgrep -a wpa_supplicant</code></td><td>Une seule instance en cours</td></tr>
 <tr><td>Routage</td><td><code>ip rule</code> et <code>ip route show table 100</code></td><td>Règle de politique et route par défaut via <code>wlo1</code></td></tr>
-<tr><td>Routage</td><td><code>ip route get 8.8.8.8 from 192.168.100.62</code></td><td>Le chemin choisi est bien <code>dev wlo1</code></td></tr>
+<tr><td>Routage</td><td><code>ip route get 8.8.8.8 from 192.0.2.62</code></td><td>Le chemin choisi est bien <code>dev wlo1</code></td></tr>
 <tr><td>WireGuard</td><td><code>wg show</code></td><td>Pair, <code>latest handshake</code> et compteurs de trafic</td></tr>
 <tr><td>WireGuard</td><td><code>systemctl is-active wg-quick@wg0</code> et <code>systemctl is-enabled wg-quick@wg0</code></td><td>Service actif et lancé au démarrage</td></tr>
 <tr><td>Routage</td><td><code>sysctl net.ipv4.ip_forward</code></td><td>Retransmission activée (<code>1</code>)</td></tr>
 <tr><td>NAT</td><td><code>iptables -t nat -L POSTROUTING -n -v</code></td><td>Deux règles <code>MASQUERADE</code> (<code>vmbr0</code> et <code>wlo1</code>) et leurs compteurs</td></tr>
 <tr><td>Diagnostic</td><td><code>tcpdump -ni wlo1 udp port 51820</code></td><td>Arrivée des paquets WireGuard sur le Wi-Fi</td></tr>
-<tr><td>Diagnostic</td><td><code>tcpdump -ni wlo1 'src 192.168.100.62 and dst 192.168.100.1'</code></td><td>Trafic NAT vers le LAN, sans le bruit du routeur</td></tr>
-<tr><td>DNS dynamique</td><td><code>cat /opt/duckdns/duck.log</code> et <code>nslookup &lt;sous-domaine&gt;.duckdns.org</code></td><td>Dernière réponse de DuckDNS (<code>OK</code>) et adresse résolue</td></tr>
+<tr><td>Diagnostic</td><td><code>tcpdump -ni wlo1 'src 192.0.2.62 and dst 192.0.2.1'</code></td><td>Trafic NAT vers le LAN, sans le bruit du routeur</td></tr>
+<tr><td>DNS dynamique</td><td><code>cat /opt/duckdns/duck.log</code> et <code>nslookup vpn.example.net</code></td><td>Dernière réponse de DuckDNS (<code>OK</code>) et adresse résolue</td></tr>
 </tbody></table>
 <p>Les commandes sont celles des versions courantes de Debian et de Proxmox VE ; adapter à la version installée.</p>
 
 <h2 id="limites">8. Limites et risques résiduels</h2>
 <ul>
 <li>Un seul lien Wi-Fi sans redondance, et un seul serveur : si l'un tombe, le VPN tombe.</li>
-<li>Le réseau de gestion <code>192.168.137.0/24</code> n'est atteignable que si le PC auquel <code>vmbr0</code> est relié est allumé ; seules <code>10.10.10.1</code> et le LAN du domicile sont joignables en permanence.</li>
+<li>Le réseau de gestion <code>198.51.100.0/24</code> n'est atteignable que si le PC auquel <code>vmbr0</code> est relié est allumé ; seules <code>10.8.0.1</code> et le LAN du domicile sont joignables en permanence.</li>
 <li>Un vrai changement d'adresse publique n'a pas été observé : la mise à jour fonctionne, mais la tâche ne s'exécute que toutes les 5 minutes, donc une coupure de cette durée est possible après un changement.</li>
 <li>Persistance au redémarrage non prouvée (test 7) : le conflit entre instances de <code>wpa_supplicant</code> pourrait réapparaître.</li>
 <li>Aucun filtrage spécifique sur le trafic du tunnel.</li>
